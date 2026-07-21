@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @meeting ? @meeting['title'] : 'Meeting' %></title>
+  <%= stylesheet_link_tag 'amanuensis' %>
+</head>
+<body class="amanuensis-page">
+  <div class="amanuensis-container">
+    <a href="/amanuensis/meetings" class="amanuensis-back-link">&larr; Back to meetings</a>
+
+    <% if @error && @meeting.nil? %>
+      <div class="amanuensis-error">
+        <p><%= @error %></p>
+      </div>
+    <% elsif @meeting %>
+      <header class="amanuensis-header">
+        <h1><%= @meeting['title'] %></h1>
+        <div class="amanuensis-header-badges">
+          <span class="amanuensis-badge amanuensis-badge-<%= @meeting['status'] %>"><%= @meeting['status'] %></span>
+          <% if @meeting['source'] == 'notesbot' %>
+            <span class="amanuensis-badge amanuensis-badge-notesbot">NotesBot</span>
+          <% else %>
+            <span class="amanuensis-badge amanuensis-badge-source"><%= @meeting['source'].humanize %></span>
+          <% end %>
+        </div>
+      </header>
+
+      <section class="amanuensis-section amanuensis-metadata">
+        <div class="amanuensis-metadata-grid">
+          <div class="amanuensis-metadata-item">
+            <span class="amanuensis-label">Recorded</span>
+            <span class="amanuensis-value"><%= formatted_date(@meeting['recorded_at']) %></span>
+          </div>
+          <% if @meeting['duration_seconds'] %>
+            <div class="amanuensis-metadata-item">
+              <span class="amanuensis-label">Duration</span>
+              <span class="amanuensis-value"><%= format_duration(@meeting['duration_seconds']) %></span>
+            </div>
+          <% end %>
+          <div class="amanuensis-metadata-item">
+            <span class="amanuensis-label">Source</span>
+            <span class="amanuensis-value"><%= @meeting['source'].humanize %></span>
+          </div>
+          <% if @meeting['discourse_topic_id'] %>
+            <div class="amanuensis-metadata-item">
+              <span class="amanuensis-label">Discourse Topic</span>
+              <span class="amanuensis-value">
+                <a href="/t/<%= @meeting['discourse_topic_id'] %>">Topic #<%= @meeting['discourse_topic_id'] %></a>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <% if @meeting['summary'].present? %>
+        <section class="amanuensis-section amanuensis-summary">
+          <h2>Meeting Summary</h2>
+          <div class="amanuensis-summary-content">
+            <%= @meeting['summary'].html_safe %>
+          </div>
+        </section>
+      <% end %>
+
+      <% if @meeting['source'] == 'notesbot' && @notesbot_turns.present? %>
+        <section class="amanuensis-section amanuensis-notesbot">
+          <details class="amanuensis-foldable">
+            <summary class="amanuensis-foldable-header">
+              <span class="amanuensis-foldable-icon">&#x1F4DC;</span>
+              <span class="amanuensis-foldable-title">Vintage NotesBot Transcript</span>
+              <span class="amanuensis-foldable-count"><%= @notesbot_turns.length %> turns</span>
+              <span class="amanuensis-foldable-toggle">expand</span>
+            </summary>
+            <div class="amanuensis-notesbot-transcript">
+              <% if @grouped_turns %>
+                <% @grouped_turns.each do |speaker, turns| %>
+                  <div class="amanuensis-speaker-group">
+                    <div class="amanuensis-speaker-header" style="<%= speaker_color_style(speaker) %>">
+                      <%= speaker %> <span class="amanuensis-speaker-count"><%= turns.length %> lines</span>
+                    </div>
+                    <% turns.each do |turn| %>
+                      <div class="amanuensis-turn">
+                        <span class="amanuensis-turn-time"><%= turn['timestamp'] %></span>
+                        <span class="amanuensis-turn-speaker" style="<%= speaker_color_style(speaker) %>"><%= speaker %></span>
+                        <span class="amanuensis-turn-text"><%= turn['text'] %></span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              <% else %>
+                <% @notesbot_turns.each do |turn| %>
+                  <div class="amanuensis-turn">
+                    <span class="amanuensis-turn-time"><%= turn['timestamp'] %></span>
+                    <span class="amanuensis-turn-speaker" style="<%= speaker_color_style(turn['speaker']) %>">
+                      <%= turn['speaker'] %>
+                    </span>
+                    <span class="amanuensis-turn-text"><%= turn['text'] %></span>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </details>
+        </section>
+      <% end %>
+
+      <% if @proposal && @proposal['items'].present? %>
+        <section class="amanuensis-section amanuensis-proposal">
+          <h2>Proposal Items</h2>
+          <p class="amanuensis-proposal-state">State: <strong><%= @proposal['state'] %></strong></p>
+
+          <% ['pending', 'approved', 'rejected', 'edited'].each do |decision| %>
+            <% items = @proposal['items'].select { |i| i['decision'] == decision } %>
+            <% next if items.empty? %>
+
+            <div class="amanuensis-item-group">
+              <h3 class="amanuensis-item-group-header amanuensis-item-group-<%= decision %>">
+                <%= decision.capitalize %>
+                <span class="amanuensis-item-count"><%= items.length %></span>
+              </h3>
+              <table class="amanuensis-items-table">
+                <thead>
+                  <tr>
+                    <th>Op</th>
+                    <th>Type</th>
+                    <th>Field</th>
+                    <th>Value</th>
+                    <% if decision == 'edited' %><th>Edited</th><% end %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% items.each do |item| %>
+                    <tr>
+                      <td><%= item['operation'] %></td>
+                      <td><%= item['target_type'] %></td>
+                      <td><%= item['target_field'] || '—' %></td>
+                      <td><code><%= item['proposed_value'] ? format_value(item['proposed_value']) : '—' %></code></td>
+                      <% if decision == 'edited' %>
+                        <td><code><%= item['edited_value'] ? format_value(item['edited_value']) : '—' %></code></td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
+
+      <% if @history.present? %>
+        <section class="amanuensis-section amanuensis-history">
+          <h2>Applied Changes</h2>
+          <table class="amanuensis-items-table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Source</th>
+                <th>Actor</th>
+                <th>Summary</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @history.each do |h| %>
+                <tr>
+                  <td><%= formatted_date(h['created_at']) %></td>
+                  <td><%= h['source'] %></td>
+                  <td><%= h['actor'] %></td>
+                  <td><%= h['summary'] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </section>
+      <% end %>
+    <% end %>
+  </div>
+</body>
+</html>
