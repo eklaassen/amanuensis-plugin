@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writers' Room Meetings</title>
+  <%= stylesheet_link_tag 'amanuensis' %>
+</head>
+<body class="amanuensis-page">
+  <div class="amanuensis-container">
+    <header class="amanuensis-header">
+      <h1>
+        <svg class="amanuensis-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          <path d="M9 14l2 2 4-4"/>
+        </svg>
+        Writers' Room Meetings
+      </h1>
+    </header>
+
+    <% if @error %>
+      <div class="amanuensis-error">
+        <p><%= @error %></p>
+      </div>
+    <% elsif @meetings.present? %>
+      <div class="amanuensis-meetings-list">
+        <% @meetings.each do |m| %>
+          <a href="/amanuensis/meetings/<%= m['id'] %>" class="amanuensis-meeting-card">
+            <div class="amanuensis-card-header">
+              <h3 class="amanuensis-meeting-title"><%= m['title'] %></h3>
+              <% if m['source'] == 'notesbot' %>
+                <span class="amanuensis-badge amanuensis-badge-notesbot">NotesBot</span>
+              <% end %>
+              <span class="amanuensis-badge amanuensis-badge-<%= m['status'] %>"><%= m['status'] %></span>
+            </div>
+            <div class="amanuensis-card-meta">
+              <span class="amanuensis-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <%= formatted_date(m['recorded_at']) %>
+              </span>
+              <span class="amanuensis-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                <%= m['source'].humanize %>
+              </span>
+              <% if m['duration_seconds'] %>
+                <span class="amanuensis-meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  <%= format_duration(m['duration_seconds']) %>
+                </span>
+              <% end %>
+              <% if m['has_notesbot_transcript'] %>
+                <span class="amanuensis-meta-item amanuensis-meta-notesbot">
+                  &#x1F4DC; Vintage notes available
+                </span>
+              <% end %>
+              <% if m['has_summary'] %>
+                <span class="amanuensis-meta-item">
+                  &#x1F4CB; Summary
+                </span>
+              <% end %>
+            </div>
+          </a>
+        <% end %>
+      </div>
+
+      <div class="amanuensis-pagination">
+        <% if @pagination['has_more'] && @pagination['next_before'] %>
+          <a href="/amanuensis/meetings?before=<%= @pagination['next_before'] %>" class="amanuensis-pagination-link">&larr; Older meetings</a>
+        <% end %>
+        <a href="/amanuensis/meetings" class="amanuensis-pagination-link">Newest &rarr;</a>
+      </div>
+    <% else %>
+      <div class="amanuensis-empty">
+        <p>No meetings found.</p>
+      </div>
+    <% end %>
+  </div>
+</body>
+</html>
