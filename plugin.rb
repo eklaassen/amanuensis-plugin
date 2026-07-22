@@ -22,8 +22,6 @@ after_initialize do
     end
   end
 
-  require_dependency 'amanuensis/meetings_controller'
-
   Amanuensis::Engine.routes.draw do
     get '/' => 'meetings#index'
     get '/meetings' => 'meetings#index'
