@@ -58,7 +58,7 @@
         <section class="amanuensis-section amanuensis-summary">
           <h2>Meeting Summary</h2>
           <div class="amanuensis-summary-content">
-            <%= @meeting['summary'].html_safe %>
+            <%= sanitized_summary(@meeting['summary']) %>
           </div>
         </section>
       <% end %>

@@ -3,7 +3,10 @@
 module Amanuensis
   class MeetingsController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
-    helper_method :formatted_date, :format_duration, :speaker_color_style, :format_value
+    helper_method :formatted_date, :format_duration, :speaker_color_style, :format_value, :sanitized_summary
+
+    SUMMARY_ALLOWED_TAGS = %w[p br strong em b i ul ol li h3 h4 blockquote a].freeze
+    SUMMARY_ALLOWED_ATTRIBUTES = %w[href].freeze
 
     before_action :ensure_plugin_enabled
     before_action :ensure_viewing_group_member
@@ -150,6 +153,16 @@ module Amanuensis
       else
         value.to_s
       end
+    end
+
+    def sanitized_summary(summary)
+      return '' if summary.blank?
+
+      ActionController::Base.helpers.sanitize(
+        summary,
+        tags: SUMMARY_ALLOWED_TAGS,
+        attributes: SUMMARY_ALLOWED_ATTRIBUTES
+      )
     end
   end
 end
