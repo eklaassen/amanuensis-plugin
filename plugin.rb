@@ -17,15 +17,3 @@ module ::Amanuensis
 end
 
 require_relative 'lib/amanuensis/engine'
-
-after_initialize do
-  Amanuensis::Engine.routes.draw do
-    get '/' => 'meetings#index'
-    get '/meetings' => 'meetings#index'
-    get '/meetings/:id' => 'meetings#show'
-  end
-
-  Discourse::Application.routes.append do
-    mount ::Amanuensis::Engine, at: '/amanuensis'
-  end
-end
