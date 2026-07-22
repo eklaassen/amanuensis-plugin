@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # Run on every PR regardless of base branch so stacked PRs
+  # (e.g. a specs PR targeting a fix branch) are also validated.
   pull_request:
-    branches: [develop]
 
 permissions:
   contents: read
