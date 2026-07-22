@@ -22,4 +22,4 @@ amanuensis_admin_key:
 amanuensis_viewing_group:
   default: ""
   type: string
-  description: "Discourse group whose members can view meetings (leave blank for admins only)"
+  description: "Discourse group whose members can view meetings (leave blank for staff only)"

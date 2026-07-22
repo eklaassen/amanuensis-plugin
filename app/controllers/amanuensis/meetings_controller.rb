@@ -61,7 +61,7 @@ module Amanuensis
       return if current_user&.staff?
 
       group_name = SiteSetting.amanuensis_viewing_group
-      return if group_name.blank?
+      raise Discourse::NotFound if group_name.blank?
 
       group = Group.find_by(name: group_name)
       raise Discourse::NotFound if group.nil?
