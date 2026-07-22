@@ -72,6 +72,11 @@ RSpec.describe Amanuensis::MeetingsController, type: :request do
         expect(response.status).to eq(404)
       end
 
+      it 'blocks an anonymous visitor without raising' do
+        get '/amanuensis/meetings'
+        expect(response.status).to eq(404)
+      end
+
       it 'allows a member of the group' do
         group.add(user)
         stub_meetings_index
