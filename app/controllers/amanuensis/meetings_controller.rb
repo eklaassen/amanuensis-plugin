@@ -69,10 +69,11 @@ module Amanuensis
 
       group_name = SiteSetting.amanuensis_viewing_group
       raise Discourse::NotFound if group_name.blank?
+      raise Discourse::NotFound if current_user.nil?
 
       group = Group.find_by(name: group_name)
       raise Discourse::NotFound if group.nil?
-      raise Discourse::NotFound unless group.users.include?(current_user)
+      raise Discourse::NotFound unless group.group_users.exists?(user_id: current_user.id)
     rescue Discourse::NotFound
       render plain: 'Not found', status: 404
     end
