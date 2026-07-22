@@ -26,3 +26,15 @@ jobs:
             echo "Types: feat fix chore docs style refactor perf test ci build revert"
             exit 1
           fi
+
+  # Runs the plugin's RSpec suite inside a full Discourse host app, using
+  # Discourse's official reusable workflow (checks out core, installs this
+  # plugin into plugins/amanuensis, provisions Postgres + Redis, runs specs).
+  plugin-tests:
+    name: Plugin tests
+    uses: discourse/.github/.github/workflows/discourse-plugin.yml@v1
+    with:
+      name: amanuensis
+      # This repo has no Gemfile yet, so the reusable linting job (which runs
+      # `bundle install` + rubocop) can't run. Wire up linting separately.
+      skip_linting: true
