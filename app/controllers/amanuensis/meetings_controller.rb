@@ -34,7 +34,11 @@ module Amanuensis
       render layout: false
     end
 
+    MEETING_ID_FORMAT = /\A[\w-]+\z/
+
     def show
+      raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
+
       resp = api_get("/v1/plugin/meetings/#{params[:id]}")
 
       if resp&.code == '200'
