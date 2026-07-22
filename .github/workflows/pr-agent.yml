@@ -1,3 +1,39 @@
+# PR-Agent (Qodo) — AI PR assistant: auto-fills the PR description and auto-runs
+# a code review, plus on-demand commands you trigger by commenting on a PR
+# (e.g. `/review`, `/improve`, `/ask <question>`, `/describe`).
+#
+# Complements the existing Gemini reviewers (pr-summary.yml runs an automatic
+# review; code-review.yml runs on `/gemini-review`).
+#
+# Model: DeepSeek-V4-Pro via OpenRouter, with Claude Sonnet 4.6 as fallback —
+# matching the amanuensis app's OpenRouter + ZDR stack. Both run
+# ZERO-DATA-RETENTION only: ZDR is enforced at the API-key level on
+# OpenRouter's side — no need for per-request extra_body (which the bundled
+# LiteLLM doesn't support). When generating the key at openrouter.ai/keys,
+# scope it to Zero Data Retention endpoints only (or enable ZDR account-wide
+# under Settings → Privacy).
+# One-time setup — add a repo secret (Settings → Secrets and variables → Actions):
+#   OPENROUTER_API_KEY_REVIEWS — from https://openrouter.ai/keys
+# To change models, edit config.model / config.fallback_models in .pr_agent.toml.
+#
+# ── Job layout (why three jobs instead of one) ──────────────────────────────
+# Describe used to share a single step (and a single concurrency rule) with the
+# heavy analysis. That coupling meant a superseding open/reopen/ready event would
+# cancel the whole run mid-flight — and since Describe only auto-runs on those PR
+# events (never on `synchronize`), a cancelled Describe was "skipped forever"
+# until someone manually ran `/describe`. Splitting the work fixes that:
+#
+#   describe  — lightweight (model_weak = deepseek flash; oversized diffs are
+#               clipped, not errored). NEVER cancelled and NOT gated on PR size,
+#               so it always completes and is never skipped. Its own concurrency
+#               group queues a stacked reopen/ready behind the running describe
+#               instead of killing it.
+#   review    — auto-run PR review (model = deepseek pro). Gated on PR size
+#               and cancellable: a newer event for the SAME PR supersedes an
+#               older in-flight run so we don't burn the pro model twice.
+#   command   — on-demand slash commands. Never cancelled; every command is
+#               intentional and runs to completion.
+
 name: PR Agent
 
 on:
@@ -13,6 +49,13 @@ permissions:
   pull-requests: write
 
 jobs:
+  # ── Auto: Describe ─────────────────────────────────────────────────────────
+  # Always runs on a new/reopened/ready PR and always finishes.
+  # cancel-in-progress: false + a describe-only concurrency group means a
+  # stacked event queues behind the running describe rather than cancelling it —
+  # the in-flight describe completes, then the freshest queued one runs. No PR
+  # size gate here: describe is cheap and clips large diffs, so it should never
+  # be skipped for being "too big".
   describe:
     if: >
       github.event_name == 'pull_request' &&
@@ -25,14 +68,20 @@ jobs:
     steps:
       - name: PR Agent action step — describe
         id: pragent_describe
-        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43
+        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43 # v0.36.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Dedicated PR-review API key — keeps spending separate from any
+          # production/coding-agent keys.
           OPENROUTER.KEY: ${{ secrets.OPENROUTER_API_KEY_REVIEWS }}
           github_action_config.auto_describe: 'true'
           github_action_config.auto_improve: 'false'
           github_action_config.auto_review: 'false'
 
+  # ── Auto: Review ───────────────────────────────────────────────────────────
+  # Auto-run PR review. Gated on PR size (< 50 changed files) and cancellable:
+  # a newer open/reopen/ready event for the SAME PR supersedes an older in-flight
+  # review run so the expensive "pro" model isn't billed twice for stale work.
   review:
     if: >
       github.event_name == 'pull_request' &&
@@ -46,7 +95,7 @@ jobs:
     steps:
       - name: PR Agent action step — review
         id: pragent_review
-        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43
+        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43 # v0.36.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENROUTER.KEY: ${{ secrets.OPENROUTER_API_KEY_REVIEWS }}
@@ -54,6 +103,18 @@ jobs:
           github_action_config.auto_improve: 'false'
           github_action_config.auto_review: 'true'
 
+  # ── On-demand slash commands ───────────────────────────────────────────────
+  # Runs the command carried in the comment body. Only on PRs (not standalone
+  # issues), only when the commenter is the repo owner (eklaassen), and only for
+  # a known PR-Agent command. This repo is public, so the owner gate is what
+  # keeps random commenters from burning CI minutes and LLM quota on demand —
+  # update the login literal if ownership changes, or switch to an
+  # author_association allowlist if multiple maintainers are added.
+  #
+  # The slash-command allowlist is hand-maintained because the PR-Agent action is
+  # pinned to a specific SHA — when you bump the pin, check the upstream changelog
+  # for new commands and add them here. Commands accept inline config overrides,
+  # e.g. `/review --config.model=openrouter/<provider>/<model>`.
   command:
     if: >
       github.event_name == 'issue_comment' &&
@@ -79,10 +140,15 @@ jobs:
     steps:
       - name: PR Agent action step — command
         id: pragent_command
-        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43
+        uses: the-pr-agent/pr-agent@ffe1f89a4dafc7d8e88b9cf010a3233e30b49f43 # v0.36.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENROUTER.KEY: ${{ secrets.OPENROUTER_API_KEY_REVIEWS }}
+          # This job only ever runs on issue_comment events, where PR-Agent runs
+          # the command from the comment body and ignores the auto_* flags. These
+          # explicit 'false' values are belt-and-suspenders: they document that
+          # nothing auto-fires here and keep reviewers from flagging a phantom
+          # auto-run path.
           github_action_config.auto_describe: 'false'
           github_action_config.auto_improve: 'false'
           github_action_config.auto_review: 'false'

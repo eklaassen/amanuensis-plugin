@@ -1,0 +1,62 @@
+[config]
+model = "openrouter/deepseek/deepseek-v4-pro"           # review + improve (heavy analysis)
+model_weak = "openrouter/deepseek/deepseek-v4-flash"    # describe (lightweight summary)
+model_reasoning = "openrouter/deepseek/deepseek-v4-flash" # self-reflection scoring
+fallback_models = ["openrouter/anthropic/claude-sonnet-4.6", "openrouter/qwen/qwen3.6-35b-a3b"]
+ai_timeout = 600  # Extend to 10 minutes
+large_patch_policy = "clip"  # Truncate oversized diffs instead of erroring
+custom_model_max_tokens = 200000
+response_language = "en-US"
+ignore_pr_title = ["^\\[Auto\\]", "^Auto"]
+ignore_pr_labels = ['invalid']
+
+[ignore]
+glob = ['*.snap']
+
+[github_action_config]
+# set as env var in .github/workflows/pr-agent.yml
+#auto_review = true
+#auto_improve = true
+#auto_describe = true
+
+[pr_reviewer]
+extra_instructions = """\
+(1) Act as a highly experienced Ruby/Rails engineer familiar with Discourse plugin conventions
+(2) Provide thorough review of code, documents, and articles
+(3) Suggest concrete code snippets for improvement
+
+(4) **Codebase-specific review priorities — check systematically:**
+
+- **Discourse plugin conventions**: Verify controllers use `requires_plugin`, `before_action` guards, and `SiteSetting` correctly. Flag any bypass of Discourse's standard exception handling (`Discourse::NotFound`, etc.) via ad-hoc rendering instead of letting it propagate consistently.
+- **Access control**: Any group/staff-gated logic must fail closed by default — flag any blank/missing setting that falls through to unrestricted access instead of denying it.
+- **ERB views**: Flag any `.html_safe` or raw HTML rendering of externally-sourced data (API responses, user input) that bypasses Rails' auto-escaping — it should go through `sanitize` with an explicit tag/attribute allowlist.
+- **ActiveRecord usage**: Flag N+1-prone patterns like loading a full association just to check membership (`assoc.include?(x)` instead of `assoc.exists?(...)`).
+- **External HTTP calls**: Verify timeouts are set (open/read), errors are rescued narrowly (not a blanket `rescue Exception`), and any user-supplied value interpolated into a request URL/path is validated first.
+- **Testing (RSpec)**: Ensure request specs cover access-control branches (staff, group member, non-member, anonymous) and stub outbound HTTP with WebMock rather than hitting real endpoints.
+
+(5) **Never** comment on indentation, whitespace, blank lines, or other purely stylistic issues unless they change program semantics.
+
+(6) Suggest concrete, actionable code snippets for each finding with before/after.
+(7) Keep comments high-signal — skip stylistic preferences, formatting, and naming nits.
+"""
+num_code_suggestions = 5
+inline_code_comments = true
+ask_and_reflect = true
+
+[pr_description]
+extra_instructions = """
+Generate clear descriptions following the repo's PR conventions:
+- Use a table to show what changed per commit (commit scope, files, purpose) for multi-commit PRs
+- List setup steps (e.g., new SiteSettings, migrations) when applicable
+"""
+generate_ai_title = true
+add_original_user_description = false
+publish_description_as_comment = true
+
+[pr_code_suggestions]
+extra_instructions = """
+- Suggest commitable code diffs, not abstract advice.
+- Flag any regression risk the change introduces.
+"""
+commitable_code_suggestions = true
+demand_code_suggestions_self_review = true
