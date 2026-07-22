@@ -1,0 +1,63 @@
+name: Gemini PR Summary
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [develop, main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-summary-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gemini-review:
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Gemini review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          MODEL: gemini-2.5-flash
+        run: |
+          set -euo pipefail
+          if [ -z "${GEMINI_API_KEY:-}" ]; then
+            echo "GEMINI_API_KEY not set — skipping Gemini review."
+            exit 0
+          fi
+
+          gh pr diff "$PR" --repo "$REPO" > full.diff
+          head -c 100000 full.diff > pr.diff
+
+          PROMPT='You are a meticulous senior code reviewer. Review the following pull-request diff. Flag correctness bugs, security issues, and notable design/quality concerns, each with a file reference. Be concise and high-signal; skip style nits. If nothing serious stands out, say so plainly.'
+
+          jq -Rs --arg p "$PROMPT" \
+            '{contents: [{parts: [{text: ($p + "\n\n--- DIFF ---\n" + .)}]}]}' \
+            pr.diff > req.json
+
+          resp="$(curl -sS \
+            "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" \
+            -H "x-goog-api-key: ${GEMINI_API_KEY}" \
+            -H 'Content-Type: application/json' \
+            -d @req.json)"
+
+          body="$(printf '%s' "$resp" | jq -r '
+            .candidates[0].content.parts[0].text
+            // ("Gemini returned no review text.\n\n```\n" + (.error.message // "unknown error") + "\n```")')"
+
+          {
+            echo "## Gemini review — \`${MODEL}\`"
+            echo
+            printf '%s\n' "$body"
+          } > comment.md
+
+          gh pr comment "$PR" --repo "$REPO" --body-file comment.md
