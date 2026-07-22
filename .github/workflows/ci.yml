@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    name: Conventional Commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! echo "$TITLE" | grep -qE '^(feat|fix|chore|docs|style|refactor|perf|test|ci|build|revert)(\(.+\))?!?: .+$'; then
+            echo "::error::PR title \"$TITLE\" does not follow conventional commit format"
+            echo "Expected: type(scope): description  (add ! after type/scope for breaking changes)"
+            echo "Types: feat fix chore docs style refactor perf test ci build revert"
+            exit 1
+          fi
