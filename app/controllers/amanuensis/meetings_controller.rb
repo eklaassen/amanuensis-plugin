@@ -3,6 +3,12 @@
 module Amanuensis
   class MeetingsController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
+
+    # These pages are rendered server-side (plain HTML), so opt out of
+    # Discourse's default check_xhr, which would otherwise serve the Ember
+    # app bootstrap for non-XHR HTML requests instead of our views.
+    skip_before_action :check_xhr, only: %i[index show]
+
     helper_method :formatted_date, :format_duration, :speaker_color_style, :format_value, :sanitized_summary
 
     SUMMARY_ALLOWED_TAGS = %w[p br strong em b i ul ol li h3 h4 blockquote a].freeze
