@@ -12,16 +12,13 @@ enabled_site_setting :amanuensis_enabled
 
 register_svg_icon 'clipboard-list' if respond_to?(:register_svg_icon)
 
+module ::Amanuensis
+  PLUGIN_NAME = 'amanuensis'
+end
+
+require_relative 'lib/amanuensis/engine'
+
 after_initialize do
-  module ::Amanuensis
-    PLUGIN_NAME = 'amanuensis'
-
-    class Engine < ::Rails::Engine
-      engine_name PLUGIN_NAME
-      isolate_namespace Amanuensis
-    end
-  end
-
   Amanuensis::Engine.routes.draw do
     get '/' => 'meetings#index'
     get '/meetings' => 'meetings#index'
