@@ -1,0 +1,7 @@
+en:
+  site_settings:
+    amanuensis_enabled: "Enable integration with the Amanuensis meeting archive API"
+    amanuensis_api_url: "Amanuensis API base URL (e.g., https://api.example.com)"
+    amanuensis_api_secret: "API secret for reading meetings (PLUGIN_SECRET)"
+    amanuensis_admin_key: "Admin key for meeting ingestion (ADMIN_SECRET)"
+    amanuensis_viewing_group: "Discourse group whose members can view meetings (leave blank for staff only)"
