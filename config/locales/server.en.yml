@@ -5,3 +5,4 @@ en:
     amanuensis_api_secret: "API secret for reading meetings (PLUGIN_SECRET)"
     amanuensis_admin_key: "Admin key for meeting ingestion (ADMIN_SECRET)"
     amanuensis_viewing_group: "Discourse group whose members can view meetings (leave blank for staff only)"
+    amanuensis_writing_group: "Discourse group whose members can propose changes to meetings (leave blank for staff only)"

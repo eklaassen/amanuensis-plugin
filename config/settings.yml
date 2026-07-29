@@ -19,3 +19,7 @@ plugins:
   amanuensis_viewing_group:
     default: ""
     type: string
+
+  amanuensis_writing_group:
+    default: ""
+    type: string
