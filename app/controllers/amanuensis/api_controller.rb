@@ -12,6 +12,14 @@ module Amanuensis
     requires_plugin Amanuensis::PLUGIN_NAME
     requires_login
 
+    # Explicit even though CodeQL can't see that Discourse core's own
+    # ::ApplicationController already declares this -- it can't follow the
+    # inheritance across the gem boundary, so it flags every subclass as
+    # unprotected without an explicit declaration here too. ajax() still
+    # sends X-CSRF-Token automatically, so this doesn't change behavior for
+    # legitimate JSON requests.
+    protect_from_forgery with: :exception
+
     include Amanuensis::AccessControl
   end
 end

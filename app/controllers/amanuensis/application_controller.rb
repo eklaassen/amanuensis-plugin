@@ -5,6 +5,12 @@ module Amanuensis
   class ApplicationController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
 
+    # Explicit even though CodeQL can't see that Discourse core's own
+    # ::ApplicationController already declares this -- it can't follow the
+    # inheritance across the gem boundary, so it flags every subclass as
+    # unprotected without an explicit declaration here too.
+    protect_from_forgery with: :exception
+
     include Amanuensis::AccessControl
 
     # These pages are rendered server-side (plain HTML), so opt out of
