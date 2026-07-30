@@ -144,25 +144,43 @@ RSpec.describe Amanuensis::ApiClient do
   end
 
   describe 'malformed JSON handling' do
-    it 'returns a nil body instead of raising when the response is not valid JSON' do
+    it 'is not ok when a 2xx response body is not valid JSON' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/meetings')
         .to_return(status: 200, body: 'not json', headers: { 'Content-Type' => 'text/plain' })
 
       result = described_class.reader.get('/v1/plugin/meetings')
 
+      # A 2xx with an unparseable body is a broken upstream response. If ok?
+      # were true here, callers would reach for result.body['key'] on nil.
       expect(result.status).to eq(200)
       expect(result.body).to be_nil
-      expect(result.error).to be_nil
-      expect(result.ok?).to eq(true)
+      expect(result.error).to match(/Malformed JSON/)
+      expect(result.ok?).to eq(false)
     end
 
-    it 'returns a nil body for an empty response' do
+    it 'leaves the error nil for a non-2xx response with an unparseable body' do
+      stub_request(:get, 'https://amanuensis.example.com/v1/plugin/meetings')
+        .to_return(status: 500, body: 'boom')
+
+      result = described_class.reader.get('/v1/plugin/meetings')
+
+      # Upstream error pages are usually plain text. The status is what
+      # carries the meaning, so callers can build their own message from it.
+      expect(result.status).to eq(500)
+      expect(result.body).to be_nil
+      expect(result.error).to be_nil
+      expect(result.ok?).to eq(false)
+    end
+
+    it 'treats an empty body as a legitimate success' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/meetings')
         .to_return(status: 204, body: '')
 
       result = described_class.reader.get('/v1/plugin/meetings')
 
       expect(result.body).to be_nil
+      expect(result.error).to be_nil
+      expect(result.ok?).to eq(true)
     end
   end
 

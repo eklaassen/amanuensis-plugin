@@ -86,7 +86,20 @@ module Amanuensis
       http.read_timeout = READ_TIMEOUT
 
       response = http.request(build_request(verb, uri, body: body, idempotency_key: idempotency_key))
-      Result.new(response.code.to_i, parse_body(response.body), nil)
+      status = response.code.to_i
+      parsed, parse_failed = parse_body(response.body)
+
+      # A 2xx whose body doesn't parse is a broken upstream response, not a
+      # success. Without this, ok? is true while body is nil and every caller
+      # raises NoMethodError on nil['key']. Non-2xx bodies are frequently
+      # plain-text error pages, so there the status carries the meaning and an
+      # unparseable body is expected -- callers build their message from the
+      # status instead.
+      if parse_failed && status.between?(200, 299)
+        return Result.new(status, nil, "Malformed JSON in Amanuensis API response (status #{status})")
+      end
+
+      Result.new(status, parsed, nil)
     rescue *RESCUED_ERRORS => e
       Result.new(nil, nil, "Could not reach Amanuensis API: #{e.message}")
     rescue URI::InvalidURIError
@@ -107,12 +120,14 @@ module Amanuensis
       request
     end
 
+    # Returns [parsed_body, parse_failed]. A blank body is not a failure --
+    # 204s and empty DELETE responses are legitimate.
     def parse_body(raw)
-      return nil if raw.blank?
+      return [nil, false] if raw.blank?
 
-      JSON.parse(raw)
+      [JSON.parse(raw), false]
     rescue JSON::ParserError
-      nil
+      [nil, true]
     end
 
     def not_configured_result
