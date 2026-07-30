@@ -119,6 +119,16 @@ RSpec.describe Amanuensis::MeetingsController, type: :request do
       expect(response.status).to eq(200)
       expect(response.body).to include('Failed to fetch meetings')
     end
+
+    it 'surfaces an error instead of raising when a 200 body is unparseable' do
+      stub_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/meetings(\?.*)?\z})
+        .to_return(status: 200, body: '<html>gateway</html>', headers: { 'Content-Type' => 'text/html' })
+
+      get '/amanuensis/meetings'
+
+      expect(response.status).to eq(200)
+      expect(response.body).to include('Malformed JSON')
+    end
   end
 
   describe '#show' do

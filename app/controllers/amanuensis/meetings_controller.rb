@@ -1,28 +1,10 @@
 # frozen_string_literal: true
 
 module Amanuensis
-  class MeetingsController < ::ApplicationController
-    requires_plugin Amanuensis::PLUGIN_NAME
-
-    # Explicit even though every action here is a GET: CodeQL's Ruby CSRF
-    # query can't see across the gem boundary into Discourse core's own
-    # ApplicationController, so it flags this subclass as unprotected
-    # without this declaration.
-    protect_from_forgery with: :exception
-
-    # These pages are rendered server-side (plain HTML), so opt out of
-    # Discourse's default check_xhr, which would otherwise serve the Ember
-    # app bootstrap for non-XHR HTML requests instead of our views.
-    skip_before_action :check_xhr, only: %i[index show]
+  class MeetingsController < Amanuensis::ApplicationController
+    before_action :ensure_viewer
 
     helper_method :formatted_date, :format_duration, :speaker_color_style, :format_value, :sanitized_summary
-
-    SUMMARY_ALLOWED_TAGS = %w[p br strong em b i ul ol li h3 h4 blockquote a].freeze
-    SUMMARY_ALLOWED_ATTRIBUTES = %w[href].freeze
-
-    before_action :ensure_plugin_enabled
-    before_action :ensure_viewing_group_member
-    before_action :fetch_from_api, only: %i[index show]
 
     PAGE_SIZE = 25
 
@@ -31,16 +13,15 @@ module Amanuensis
       params_hash[:before] = params[:before] if params[:before].present?
       params_hash[:status] = params[:status] if params[:status].present?
 
-      resp = api_get('/v1/plugin/meetings', params_hash)
+      result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
 
-      if resp&.code == '200'
-        body = JSON.parse(resp.body)
-        @meetings = body['meetings']
-        @pagination = body['pagination']
+      if result.ok?
+        @meetings = result.body['meetings']
+        @pagination = result.body['pagination']
       else
         @meetings = []
         @pagination = { 'has_more' => false }
-        @error ||= "Failed to fetch meetings (status #{resp&.code || 'unknown'})"
+        @error ||= result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
       end
 
       render layout: false
@@ -51,10 +32,10 @@ module Amanuensis
     def show
       raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
 
-      resp = api_get("/v1/plugin/meetings/#{params[:id]}")
+      result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings/#{params[:id]}")
 
-      if resp&.code == '200'
-        @data = JSON.parse(resp.body)
+      if result.ok?
+        @data = result.body
         @meeting = @data['meeting']
         @proposal = @data['proposal']
         @history = @data['history']
@@ -64,63 +45,13 @@ module Amanuensis
           @grouped_turns = @notesbot_turns.group_by { |t| t['speaker'] }
         end
       else
-        @error ||= "Meeting not found (status #{resp&.code || 'unknown'})"
+        @error ||= result.error || "Meeting not found (status #{result.status || 'unknown'})"
       end
 
       render layout: false
     end
 
     private
-
-    def ensure_plugin_enabled
-      raise Discourse::NotFound unless SiteSetting.amanuensis_enabled
-    end
-
-    def ensure_viewing_group_member
-      return if current_user&.staff?
-
-      group_name = SiteSetting.amanuensis_viewing_group
-      raise Discourse::NotFound if group_name.blank?
-      raise Discourse::NotFound if current_user.nil?
-
-      group = Group.find_by(name: group_name)
-      raise Discourse::NotFound if group.nil?
-      raise Discourse::NotFound unless group.group_users.exists?(user_id: current_user.id)
-    end
-
-    def fetch_from_api
-      @api_url = SiteSetting.amanuensis_api_url
-      @api_secret = SiteSetting.amanuensis_api_secret
-
-      if @api_url.blank? || @api_secret.blank?
-        @error = 'Amanuensis plugin is not configured. Please set API URL and secret in settings.'
-      end
-    end
-
-    def api_get(path, params = {})
-      return nil if @api_url.blank? || @api_secret.blank?
-
-      uri = URI.join(@api_url, path)
-      uri.query = URI.encode_www_form(params) if params.any?
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
-      http.open_timeout = 5
-      http.read_timeout = 15
-
-      request = Net::HTTP::Get.new(uri)
-      request['Authorization'] = "Bearer #{@api_secret}"
-      request['Accept'] = 'application/json'
-
-      response = http.request(request)
-      response
-    rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
-      @error = "Could not reach Amanuensis API: #{e.message}"
-      nil
-    rescue URI::InvalidURIError
-      @error = 'Invalid Amanuensis API URL configured.'
-      nil
-    end
 
     def formatted_date(iso_string)
       return '' if iso_string.nil?
@@ -171,13 +102,7 @@ module Amanuensis
     end
 
     def sanitized_summary(summary)
-      return '' if summary.blank?
-
-      ActionController::Base.helpers.sanitize(
-        summary,
-        tags: SUMMARY_ALLOWED_TAGS,
-        attributes: SUMMARY_ALLOWED_ATTRIBUTES
-      )
+      Amanuensis::Sanitizer.sanitize_summary(summary)
     end
   end
 end
