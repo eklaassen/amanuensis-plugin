@@ -1,0 +1,8 @@
+<%# locals: base_path, has_more, next_before, extra_params (optional hash, e.g. status filter) %>
+<% extra = local_assigns.fetch(:extra_params, {}) %>
+<div class="amanuensis-pagination">
+  <% if has_more && next_before %>
+    <a href="<%= base_path %>?<%= extra.merge(before: next_before).to_query %>" class="amanuensis-pagination-link">&larr; Older</a>
+  <% end %>
+  <a href="<%= base_path %><%= extra.present? ? "?#{extra.to_query}" : '' %>" class="amanuensis-pagination-link">Newest &rarr;</a>
+</div>

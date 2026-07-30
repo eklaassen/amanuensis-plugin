@@ -1,0 +1,9 @@
+<%# locals: entry %>
+<div class="amanuensis-history-card">
+  <div class="amanuensis-history-card-header">
+    <span class="amanuensis-value"><%= formatted_date(entry['created_at']) %></span>
+    <%= render 'amanuensis/shared/badge', label: entry['source'], variant: 'source' %>
+  </div>
+  <div class="amanuensis-history-actor"><%= entry['actor'] %></div>
+  <div class="amanuensis-history-summary"><%= entry['summary'] %></div>
+</div>

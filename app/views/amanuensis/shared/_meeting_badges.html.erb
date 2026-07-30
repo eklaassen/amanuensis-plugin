@@ -1,0 +1,7 @@
+<%# locals: meeting (hash with 'status'/'source') %>
+<%= render 'amanuensis/shared/badge', label: meeting['status'], variant: meeting['status'] %>
+<% if meeting['source'] == 'notesbot' %>
+  <%= render 'amanuensis/shared/badge', label: 'NotesBot', variant: 'notesbot' %>
+<% else %>
+  <%= render 'amanuensis/shared/badge', label: meeting['source'].humanize, variant: 'source' %>
+<% end %>

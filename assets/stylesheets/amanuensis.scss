@@ -1,3 +1,46 @@
+// Semantic color tokens for the fixed palette this stylesheet needs
+// (status/outcome colors, error surfaces, foldable/transcript backgrounds)
+// that Discourse's own --d-content-*/--primary/--secondary variables don't
+// cover. These pages render outside the Discourse app layout (no header,
+// no theme CSS), so those Discourse variables are typically undefined here
+// anyway -- this token layer is what actually drives dark mode on this page,
+// independent of whatever theme the rest of the forum is running.
+:root {
+  --amanuensis-success-bg: #e6f7e6;
+  --amanuensis-success-fg: #2a8a2a;
+  --amanuensis-danger-bg: #fde8e8;
+  --amanuensis-danger-fg: #c0392b;
+  --amanuensis-danger-border: #f5c6cb;
+  --amanuensis-warning-bg: #fef6e0;
+  --amanuensis-warning-fg: #b8860b;
+  --amanuensis-info-bg: #e0f0fe;
+  --amanuensis-info-fg: #1a6fb5;
+  --amanuensis-notesbot-bg: #f0e6d0;
+  --amanuensis-notesbot-fg: #8b6914;
+  --amanuensis-foldable-bg: #faf6ef;
+  --amanuensis-foldable-hover-bg: #f5efe4;
+  --amanuensis-transcript-bg: #fefcf7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --amanuensis-success-bg: #1a3a1a;
+    --amanuensis-success-fg: #6fd66f;
+    --amanuensis-danger-bg: #4a1f1f;
+    --amanuensis-danger-fg: #f28b8b;
+    --amanuensis-danger-border: #6b2c2c;
+    --amanuensis-warning-bg: #4a3c14;
+    --amanuensis-warning-fg: #e8c468;
+    --amanuensis-info-bg: #142f4a;
+    --amanuensis-info-fg: #6fb3ea;
+    --amanuensis-notesbot-bg: #3a3018;
+    --amanuensis-notesbot-fg: #d4b878;
+    --amanuensis-foldable-bg: #2a2620;
+    --amanuensis-foldable-hover-bg: #332e26;
+    --amanuensis-transcript-bg: #26241f;
+  }
+}
+
 .amanuensis-page {
   background: var(--d-content-background, var(--secondary, #fff));
   color: var(--d-content-color, var(--primary, #222));
@@ -70,22 +113,22 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
 
-  &.amanuensis-badge-complete { background: #e6f7e6; color: #2a8a2a; }
-  &.amanuensis-badge-failed { background: #fde8e8; color: #c0392b; }
-  &.amanuensis-badge-pending { background: #fef6e0; color: #b8860b; }
+  &.amanuensis-badge-complete { background: var(--amanuensis-success-bg); color: var(--amanuensis-success-fg); }
+  &.amanuensis-badge-failed { background: var(--amanuensis-danger-bg); color: var(--amanuensis-danger-fg); }
+  &.amanuensis-badge-pending { background: var(--amanuensis-warning-bg); color: var(--amanuensis-warning-fg); }
   &.amanuensis-badge-downloading,
   &.amanuensis-badge-transcribing,
   &.amanuensis-badge-summarizing,
   &.amanuensis-badge-vaulting,
   &.amanuensis-badge-archiving,
   &.amanuensis-badge-analyzing {
-    background: #e0f0fe;
-    color: #1a6fb5;
+    background: var(--amanuensis-info-bg);
+    color: var(--amanuensis-info-fg);
   }
 
   &.amanuensis-badge-notesbot {
-    background: #f0e6d0;
-    color: #8b6914;
+    background: var(--amanuensis-notesbot-bg);
+    color: var(--amanuensis-notesbot-fg);
   }
 
   &.amanuensis-badge-source {
@@ -150,7 +193,7 @@
   }
 
   &.amanuensis-meta-notesbot {
-    color: #8b6914;
+    color: var(--amanuensis-notesbot-fg);
   }
 }
 
@@ -178,10 +221,10 @@
 
 .amanuensis-error {
   padding: 12px 16px;
-  background: #fde8e8;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  color: #c0392b;
+  background: var(--amanuensis-danger-bg);
+  border: 1px solid var(--amanuensis-danger-border);
+  border-radius: 10px;
+  color: var(--amanuensis-danger-fg);
   margin-bottom: 16px;
 }
 
@@ -233,12 +276,12 @@
   gap: 8px;
   padding: 14px 16px;
   cursor: pointer;
-  background: #faf6ef;
+  background: var(--amanuensis-foldable-bg);
   user-select: none;
   font-size: 0.95em;
 
   &:hover {
-    background: #f5efe4;
+    background: var(--amanuensis-foldable-hover-bg);
   }
 
   &::-webkit-details-marker {
@@ -281,7 +324,7 @@ details:not([open]) .amanuensis-foldable-toggle {
 .amanuensis-notesbot-transcript {
   padding: 8px 16px 16px;
   font-family: 'Georgia', 'Times New Roman', serif;
-  background: #fefcf7;
+  background: var(--amanuensis-transcript-bg);
   border-top: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
   font-size: 0.92em;
   line-height: 1.6;
@@ -355,10 +398,10 @@ details:not([open]) .amanuensis-foldable-toggle {
   padding-bottom: 4px;
   border-bottom: 2px solid;
 
-  &.amanuensis-item-group-pending { border-color: #b8860b; }
-  &.amanuensis-item-group-approved { border-color: #2a8a2a; }
-  &.amanuensis-item-group-rejected { border-color: #c0392b; }
-  &.amanuensis-item-group-edited { border-color: #1a6fb5; }
+  &.amanuensis-item-group-pending { border-color: var(--amanuensis-warning-fg); }
+  &.amanuensis-item-group-approved { border-color: var(--amanuensis-success-fg); }
+  &.amanuensis-item-group-rejected { border-color: var(--amanuensis-danger-fg); }
+  &.amanuensis-item-group-edited { border-color: var(--amanuensis-info-fg); }
 }
 
 .amanuensis-item-count {
@@ -367,33 +410,78 @@ details:not([open]) .amanuensis-foldable-toggle {
   opacity: 0.6;
 }
 
-.amanuensis-items-table {
-  width: 100%;
-  border-collapse: collapse;
+.amanuensis-item-cards,
+.amanuensis-history-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amanuensis-item-card,
+.amanuensis-history-card {
+  padding: 12px 14px;
+  background: var(--d-content-card-background, var(--secondary, #fff));
+  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  border-radius: 10px;
   font-size: 0.88em;
+}
 
-  th, td {
-    padding: 8px 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
-    vertical-align: top;
-  }
+.amanuensis-item-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
 
-  th {
-    font-size: 0.78em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--d-content-color-soft, var(--primary-medium, #888));
-    background: var(--d-content-card-background, var(--secondary, #fff));
-  }
+.amanuensis-item-op {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.03em;
+}
+
+.amanuensis-item-type {
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+}
+
+.amanuensis-item-field {
+  font-size: 0.9em;
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  margin-bottom: 6px;
+}
+
+.amanuensis-item-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 
   code {
     font-size: 0.9em;
     word-break: break-all;
-    max-width: 200px;
-    display: inline-block;
   }
+}
+
+.amanuensis-item-value-edited {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--d-content-border, var(--primary-low, #e0e0e0));
+}
+
+.amanuensis-history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.amanuensis-history-actor {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.amanuensis-history-summary {
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
 }
 
 h2 {

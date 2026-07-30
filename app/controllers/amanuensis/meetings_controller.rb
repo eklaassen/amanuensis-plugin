@@ -23,8 +23,6 @@ module Amanuensis
         @pagination = { 'has_more' => false }
         @error ||= result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
       end
-
-      render layout: false
     end
 
     MEETING_ID_FORMAT = /\A[\w-]+\z/
@@ -47,8 +45,6 @@ module Amanuensis
       else
         @error ||= result.error || "Meeting not found (status #{result.status || 'unknown'})"
       end
-
-      render layout: false
     end
 
     private
