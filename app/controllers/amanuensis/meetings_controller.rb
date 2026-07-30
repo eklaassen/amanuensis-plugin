@@ -4,6 +4,12 @@ module Amanuensis
   class MeetingsController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
 
+    # Explicit even though every action here is a GET: CodeQL's Ruby CSRF
+    # query can't see across the gem boundary into Discourse core's own
+    # ApplicationController, so it flags this subclass as unprotected
+    # without this declaration.
+    protect_from_forgery with: :exception
+
     # These pages are rendered server-side (plain HTML), so opt out of
     # Discourse's default check_xhr, which would otherwise serve the Ember
     # app bootstrap for non-XHR HTML requests instead of our views.
