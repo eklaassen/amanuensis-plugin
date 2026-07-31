@@ -516,25 +516,25 @@ h2 {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  border-bottom: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
 }
 
 .amanuensis-nav-link {
   padding: 8px 12px;
   font-size: 0.9em;
   font-weight: 600;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
   text-decoration: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 
   &:hover {
-    color: var(--d-content-color, var(--primary, #222));
+    color: var(--d-content-color, var(--primary, var(--amanuensis-surface-fg)));
   }
 
   &.amanuensis-nav-link-active {
-    color: var(--d-content-color, var(--primary, #222));
-    border-bottom-color: var(--d-content-link, var(--tertiary, #08c));
+    color: var(--d-content-color, var(--primary, var(--amanuensis-surface-fg)));
+    border-bottom-color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
   }
 }
 
@@ -574,20 +574,20 @@ h2 {
   display: inline-block;
   padding: 5px 12px;
   border-radius: 20px;
-  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  border: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   font-size: 0.82em;
   font-weight: 600;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
   text-decoration: none;
 
   &:hover {
-    border-color: var(--d-content-link, var(--tertiary, #08c));
-    color: var(--d-content-color, var(--primary, #222));
+    border-color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
+    color: var(--d-content-color, var(--primary, var(--amanuensis-surface-fg)));
   }
 
   &.amanuensis-chip-active {
-    background: var(--d-content-link, var(--tertiary, #08c));
-    border-color: var(--d-content-link, var(--tertiary, #08c));
+    background: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
+    border-color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
     color: #fff;
   }
 }
@@ -609,7 +609,7 @@ h2 {
   th, td {
     padding: 8px 10px;
     text-align: left;
-    border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+    border-bottom: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
     vertical-align: top;
     white-space: nowrap;
   }
@@ -619,8 +619,8 @@ h2 {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--d-content-color-soft, var(--primary-medium, #888));
-    background: var(--d-content-card-background, var(--secondary, #fff));
+    color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
+    background: var(--d-content-card-background, var(--secondary, var(--amanuensis-card-bg)));
   }
 }
 
@@ -633,8 +633,8 @@ h2 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  background: var(--d-hover-background, #e9e9e9);
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  background: var(--d-hover-background, var(--amanuensis-hover-bg));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 // ── Pipeline timeline (meeting detail, run detail) ───────────────────────
@@ -657,7 +657,7 @@ h2 {
     top: 14px;
     bottom: 0;
     width: 2px;
-    background: var(--d-content-border, var(--primary-low, #e0e0e0));
+    background: var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   }
 }
 
@@ -667,7 +667,7 @@ h2 {
   height: 12px;
   border-radius: 50%;
   margin-top: 4px;
-  background: var(--d-content-link, var(--tertiary, #08c));
+  background: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
 }
 
 .amanuensis-timeline-content {
@@ -685,7 +685,7 @@ h2 {
 
 .amanuensis-timeline-meta {
   font-size: 0.85em;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 .amanuensis-timeline-error {
