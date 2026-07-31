@@ -489,3 +489,187 @@ h2 {
   font-weight: 700;
   margin: 0 0 12px;
 }
+
+// ── Nav (pipeline/stages/outcomes pages) ────────────────────────────────
+
+.amanuensis-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+}
+
+.amanuensis-nav-link {
+  padding: 8px 12px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+
+  &:hover {
+    color: var(--d-content-color, var(--primary, #222));
+  }
+
+  &.amanuensis-nav-link-active {
+    color: var(--d-content-color, var(--primary, #222));
+    border-bottom-color: var(--d-content-link, var(--tertiary, #08c));
+  }
+}
+
+// ── Stage-run / meeting outcome badges ───────────────────────────────────
+// stage_runs.outcome and meetings.status (complete/failed) share this
+// vocabulary; the pipeline in-flight statuses already have colors above.
+
+.amanuensis-badge {
+  &.amanuensis-badge-running,
+  &.amanuensis-badge-deferred {
+    background: var(--amanuensis-info-bg);
+    color: var(--amanuensis-info-fg);
+  }
+
+  &.amanuensis-badge-succeeded {
+    background: var(--amanuensis-success-bg);
+    color: var(--amanuensis-success-fg);
+  }
+
+  &.amanuensis-badge-retrying,
+  &.amanuensis-badge-rewound {
+    background: var(--amanuensis-warning-bg);
+    color: var(--amanuensis-warning-fg);
+  }
+}
+
+// ── Filter chips (stage/outcome switchers) ───────────────────────────────
+
+.amanuensis-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.amanuensis-chip {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--d-content-link, var(--tertiary, #08c));
+    color: var(--d-content-color, var(--primary, #222));
+  }
+
+  &.amanuensis-chip-active {
+    background: var(--d-content-link, var(--tertiary, #08c));
+    border-color: var(--d-content-link, var(--tertiary, #08c));
+    color: #fff;
+  }
+}
+
+// ── Data table (stage-run history, outcomes) ─────────────────────────────
+// Wrapper gives the table its own horizontal scroll on narrow viewports
+// instead of the whole page scrolling sideways.
+
+.amanuensis-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.amanuensis-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88em;
+
+  th, td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+    vertical-align: top;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.78em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--d-content-color-soft, var(--primary-medium, #888));
+    background: var(--d-content-card-background, var(--secondary, #fff));
+  }
+}
+
+.amanuensis-inferred-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.72em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--d-hover-background, #e9e9e9);
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+}
+
+// ── Pipeline timeline (meeting detail, run detail) ───────────────────────
+
+.amanuensis-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.amanuensis-timeline-entry {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  position: relative;
+
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 14px;
+    bottom: 0;
+    width: 2px;
+    background: var(--d-content-border, var(--primary-low, #e0e0e0));
+  }
+}
+
+.amanuensis-timeline-marker {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 4px;
+  background: var(--d-content-link, var(--tertiary, #08c));
+}
+
+.amanuensis-timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.amanuensis-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.amanuensis-timeline-meta {
+  font-size: 0.85em;
+  color: var(--d-content-color-soft, var(--primary-medium, #888));
+}
+
+.amanuensis-timeline-error {
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: var(--amanuensis-danger-fg);
+}

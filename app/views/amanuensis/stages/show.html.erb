@@ -1,0 +1,63 @@
+<% content_for :title, "#{humanize_stage(params[:stage])} Runs" %>
+
+<header class="amanuensis-header">
+  <h1><%= humanize_stage(params[:stage]) %> Runs</h1>
+</header>
+
+<div class="amanuensis-chips">
+  <% Amanuensis::PipelineStages::OBSERVABLE.each do |stage| %>
+    <a href="/amanuensis/stages/<%= stage %>"
+       class="amanuensis-chip<%= ' amanuensis-chip-active' if stage == params[:stage] %>"><%= humanize_stage(stage) %></a>
+  <% end %>
+</div>
+
+<div class="amanuensis-chips">
+  <a href="/amanuensis/stages/<%= params[:stage] %>"
+     class="amanuensis-chip<%= ' amanuensis-chip-active' if params[:outcome].blank? %>">All</a>
+  <% %w[succeeded failed retrying rewound deferred running].each do |outcome| %>
+    <a href="/amanuensis/stages/<%= params[:stage] %>?outcome=<%= outcome %>"
+       class="amanuensis-chip<%= ' amanuensis-chip-active' if params[:outcome] == outcome %>"><%= outcome.capitalize %></a>
+  <% end %>
+</div>
+
+<% if @error %>
+  <%= render 'amanuensis/shared/error', message: @error %>
+<% elsif @runs.present? %>
+  <div class="amanuensis-table-wrapper">
+    <table class="amanuensis-data-table">
+      <thead>
+        <tr>
+          <th>Meeting</th>
+          <th>Started</th>
+          <th>Duration</th>
+          <th>Attempt</th>
+          <th>Outcome</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @runs.each do |run| %>
+          <tr>
+            <td>
+              <a href="/amanuensis/stages/<%= params[:stage] %>/runs/<%= run['id'] %>"><%= run['meeting_title'] %></a>
+              <% if run['inferred'] %><span class="amanuensis-inferred-tag">reconstructed</span><% end %>
+            </td>
+            <td><%= formatted_date(run['started_at']) %></td>
+            <td><%= run['duration_ms'] ? format_duration_ms(run['duration_ms']) : '—' %></td>
+            <td><%= run['attempt'] %></td>
+            <td><%= render 'amanuensis/shared/badge', label: run['outcome'], variant: run['outcome'] %></td>
+            <td><%= run['failure_reason'] || '—' %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render 'amanuensis/shared/pagination',
+        base_path: "/amanuensis/stages/#{params[:stage]}",
+        has_more: @pagination['has_more'],
+        next_before: @pagination['next_before'],
+        extra_params: params[:outcome].present? ? { outcome: params[:outcome] } : {} %>
+<% else %>
+  <%= render 'amanuensis/shared/empty', message: 'No runs recorded for this stage yet.' %>
+<% end %>

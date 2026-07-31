@@ -1,0 +1,34 @@
+<%# locals: stage_runs (array of run hashes: stage/outcome/attempt/started_at/
+    finished_at/duration_ms/error_code/failure_reason/rewind_to/inferred) %>
+<% if stage_runs.present? %>
+  <div class="amanuensis-timeline">
+    <% stage_runs.each do |run| %>
+      <div class="amanuensis-timeline-entry">
+        <div class="amanuensis-timeline-marker"></div>
+        <div class="amanuensis-timeline-content">
+          <div class="amanuensis-timeline-header">
+            <%= render 'amanuensis/shared/badge', label: humanize_stage(run['stage']), variant: 'source' %>
+            <%= render 'amanuensis/shared/badge', label: run['outcome'], variant: run['outcome'] %>
+            <% if run['inferred'] %>
+              <span class="amanuensis-inferred-tag">reconstructed</span>
+            <% end %>
+          </div>
+          <div class="amanuensis-timeline-meta">
+            <%= formatted_date(run['started_at']) %>
+            <% if run['duration_ms'] %>
+              &middot; <%= format_duration_ms(run['duration_ms']) %>
+            <% end %>
+            <% if run['attempt'].to_i > 1 %>
+              &middot; attempt <%= run['attempt'] %>
+            <% end %>
+          </div>
+          <% if run['failure_reason'].present? %>
+            <div class="amanuensis-timeline-error"><%= run['failure_reason'] %></div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="amanuensis-value">No pipeline history recorded for this meeting.</p>
+<% end %>
