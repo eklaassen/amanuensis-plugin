@@ -110,4 +110,11 @@
       </div>
     </section>
   <% end %>
+
+  <% if @stage_runs.present? %>
+    <section class="amanuensis-section amanuensis-pipeline-timeline">
+      <h2>Pipeline Timeline</h2>
+      <%= render 'amanuensis/shared/stage_timeline', stage_runs: @stage_runs %>
+    </section>
+  <% end %>
 <% end %>
