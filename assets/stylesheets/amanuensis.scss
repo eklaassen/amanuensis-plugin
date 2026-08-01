@@ -1,6 +1,69 @@
+// Semantic color tokens for the fixed palette this stylesheet needs
+// (status/outcome colors, error surfaces, foldable/transcript backgrounds,
+// AND the base page/card/border/text surface -- surface-* below) that
+// Discourse's own --d-content-*/--primary/--secondary variables don't
+// cover. These pages render outside the Discourse app layout (no header,
+// no theme CSS), so those Discourse variables are typically undefined here
+// anyway -- this token layer is what actually drives dark mode on this page,
+// independent of whatever theme the rest of the forum is running. Every
+// var(--d-content-*, var(--primary|secondary|..., #hex)) chain in this file
+// ends in one of these tokens rather than a raw hex, specifically so dark
+// mode reaches the base page chrome too, not just badges/accents.
+:root {
+  --amanuensis-surface-bg: #fff;
+  --amanuensis-surface-fg: #222;
+  --amanuensis-card-bg: #fff;
+  --amanuensis-border: #e0e0e0;
+  --amanuensis-muted-fg: #888;
+  --amanuensis-link: #08c;
+  --amanuensis-hover-bg: #e9e9e9;
+
+  --amanuensis-success-bg: #e6f7e6;
+  --amanuensis-success-fg: #2a8a2a;
+  --amanuensis-danger-bg: #fde8e8;
+  --amanuensis-danger-fg: #c0392b;
+  --amanuensis-danger-border: #f5c6cb;
+  --amanuensis-warning-bg: #fef6e0;
+  --amanuensis-warning-fg: #b8860b;
+  --amanuensis-info-bg: #e0f0fe;
+  --amanuensis-info-fg: #1a6fb5;
+  --amanuensis-notesbot-bg: #f0e6d0;
+  --amanuensis-notesbot-fg: #8b6914;
+  --amanuensis-foldable-bg: #faf6ef;
+  --amanuensis-foldable-hover-bg: #f5efe4;
+  --amanuensis-transcript-bg: #fefcf7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --amanuensis-surface-bg: #161616;
+    --amanuensis-surface-fg: #e4e4e4;
+    --amanuensis-card-bg: #242424;
+    --amanuensis-border: #3a3a3a;
+    --amanuensis-muted-fg: #9a9a9a;
+    --amanuensis-link: #5eb3f5;
+    --amanuensis-hover-bg: #333;
+
+    --amanuensis-success-bg: #1a3a1a;
+    --amanuensis-success-fg: #6fd66f;
+    --amanuensis-danger-bg: #4a1f1f;
+    --amanuensis-danger-fg: #f28b8b;
+    --amanuensis-danger-border: #6b2c2c;
+    --amanuensis-warning-bg: #4a3c14;
+    --amanuensis-warning-fg: #e8c468;
+    --amanuensis-info-bg: #142f4a;
+    --amanuensis-info-fg: #6fb3ea;
+    --amanuensis-notesbot-bg: #3a3018;
+    --amanuensis-notesbot-fg: #d4b878;
+    --amanuensis-foldable-bg: #2a2620;
+    --amanuensis-foldable-hover-bg: #332e26;
+    --amanuensis-transcript-bg: #26241f;
+  }
+}
+
 .amanuensis-page {
-  background: var(--d-content-background, var(--secondary, #fff));
-  color: var(--d-content-color, var(--primary, #222));
+  background: var(--d-content-background, var(--secondary, var(--amanuensis-surface-bg)));
+  color: var(--d-content-color, var(--primary, var(--amanuensis-surface-fg)));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   line-height: 1.5;
   margin: 0;
@@ -20,7 +83,7 @@
 .amanuensis-back-link {
   display: inline-block;
   margin-bottom: 16px;
-  color: var(--d-content-link, var(--tertiary, #08c));
+  color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
   text-decoration: none;
   font-size: 0.9em;
 
@@ -70,27 +133,27 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
 
-  &.amanuensis-badge-complete { background: #e6f7e6; color: #2a8a2a; }
-  &.amanuensis-badge-failed { background: #fde8e8; color: #c0392b; }
-  &.amanuensis-badge-pending { background: #fef6e0; color: #b8860b; }
+  &.amanuensis-badge-complete { background: var(--amanuensis-success-bg); color: var(--amanuensis-success-fg); }
+  &.amanuensis-badge-failed { background: var(--amanuensis-danger-bg); color: var(--amanuensis-danger-fg); }
+  &.amanuensis-badge-pending { background: var(--amanuensis-warning-bg); color: var(--amanuensis-warning-fg); }
   &.amanuensis-badge-downloading,
   &.amanuensis-badge-transcribing,
   &.amanuensis-badge-summarizing,
   &.amanuensis-badge-vaulting,
   &.amanuensis-badge-archiving,
   &.amanuensis-badge-analyzing {
-    background: #e0f0fe;
-    color: #1a6fb5;
+    background: var(--amanuensis-info-bg);
+    color: var(--amanuensis-info-fg);
   }
 
   &.amanuensis-badge-notesbot {
-    background: #f0e6d0;
-    color: #8b6914;
+    background: var(--amanuensis-notesbot-bg);
+    color: var(--amanuensis-notesbot-fg);
   }
 
   &.amanuensis-badge-source {
-    background: var(--d-hover-background, #e9e9e9);
-    color: var(--d-primary-medium, #666);
+    background: var(--d-hover-background, var(--amanuensis-hover-bg));
+    color: var(--d-primary-medium, var(--amanuensis-muted-fg));
   }
 }
 
@@ -103,15 +166,15 @@
 .amanuensis-meeting-card {
   display: block;
   padding: 16px 18px;
-  background: var(--d-content-card-background, var(--secondary, #fff));
-  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  background: var(--d-content-card-background, var(--secondary, var(--amanuensis-card-bg)));
+  border: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   border-radius: 10px;
   text-decoration: none;
   color: inherit;
   transition: box-shadow 0.15s, border-color 0.15s;
 
   &:hover {
-    border-color: var(--d-content-link, var(--tertiary, #08c));
+    border-color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 }
@@ -137,7 +200,7 @@
   flex-wrap: wrap;
   gap: 6px 16px;
   font-size: 0.85em;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 .amanuensis-meta-item {
@@ -150,7 +213,7 @@
   }
 
   &.amanuensis-meta-notesbot {
-    color: #8b6914;
+    color: var(--amanuensis-notesbot-fg);
   }
 }
 
@@ -161,7 +224,7 @@
 }
 
 .amanuensis-pagination-link {
-  color: var(--d-content-link, var(--tertiary, #08c));
+  color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
   text-decoration: none;
   font-size: 0.9em;
 
@@ -173,15 +236,15 @@
 .amanuensis-empty {
   text-align: center;
   padding: 48px 20px;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 .amanuensis-error {
   padding: 12px 16px;
-  background: #fde8e8;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  color: #c0392b;
+  background: var(--amanuensis-danger-bg);
+  border: 1px solid var(--amanuensis-danger-border);
+  border-radius: 10px;
+  color: var(--amanuensis-danger-fg);
   margin-bottom: 16px;
 }
 
@@ -206,7 +269,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 .amanuensis-value {
@@ -215,14 +278,14 @@
 
 .amanuensis-summary-content {
   padding: 16px;
-  background: var(--d-content-card-background, var(--secondary, #fff));
-  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  background: var(--d-content-card-background, var(--secondary, var(--amanuensis-card-bg)));
+  border: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   border-radius: 10px;
   line-height: 1.6;
 }
 
 .amanuensis-foldable {
-  border: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  border: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   border-radius: 10px;
   overflow: hidden;
 }
@@ -233,12 +296,12 @@
   gap: 8px;
   padding: 14px 16px;
   cursor: pointer;
-  background: #faf6ef;
+  background: var(--amanuensis-foldable-bg);
   user-select: none;
   font-size: 0.95em;
 
   &:hover {
-    background: #f5efe4;
+    background: var(--amanuensis-foldable-hover-bg);
   }
 
   &::-webkit-details-marker {
@@ -257,12 +320,12 @@
 .amanuensis-foldable-count {
   margin-left: auto;
   font-size: 0.85em;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 .amanuensis-foldable-toggle {
   font-size: 0.8em;
-  color: var(--d-content-link, var(--tertiary, #08c));
+  color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
   margin-left: 8px;
 }
 
@@ -281,8 +344,8 @@ details:not([open]) .amanuensis-foldable-toggle {
 .amanuensis-notesbot-transcript {
   padding: 8px 16px 16px;
   font-family: 'Georgia', 'Times New Roman', serif;
-  background: #fefcf7;
-  border-top: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
+  background: var(--amanuensis-transcript-bg);
+  border-top: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
   font-size: 0.92em;
   line-height: 1.6;
 }
@@ -317,7 +380,7 @@ details:not([open]) .amanuensis-foldable-toggle {
 .amanuensis-turn-time {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
   font-size: 0.78em;
-  color: var(--d-content-color-soft, var(--primary-medium, #888));
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
   min-width: 42px;
   text-align: right;
   flex-shrink: 0;
@@ -355,10 +418,10 @@ details:not([open]) .amanuensis-foldable-toggle {
   padding-bottom: 4px;
   border-bottom: 2px solid;
 
-  &.amanuensis-item-group-pending { border-color: #b8860b; }
-  &.amanuensis-item-group-approved { border-color: #2a8a2a; }
-  &.amanuensis-item-group-rejected { border-color: #c0392b; }
-  &.amanuensis-item-group-edited { border-color: #1a6fb5; }
+  &.amanuensis-item-group-pending { border-color: var(--amanuensis-warning-fg); }
+  &.amanuensis-item-group-approved { border-color: var(--amanuensis-success-fg); }
+  &.amanuensis-item-group-rejected { border-color: var(--amanuensis-danger-fg); }
+  &.amanuensis-item-group-edited { border-color: var(--amanuensis-info-fg); }
 }
 
 .amanuensis-item-count {
@@ -367,33 +430,78 @@ details:not([open]) .amanuensis-foldable-toggle {
   opacity: 0.6;
 }
 
-.amanuensis-items-table {
-  width: 100%;
-  border-collapse: collapse;
+.amanuensis-item-cards,
+.amanuensis-history-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amanuensis-item-card,
+.amanuensis-history-card {
+  padding: 12px 14px;
+  background: var(--d-content-card-background, var(--secondary, var(--amanuensis-card-bg)));
+  border: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
+  border-radius: 10px;
   font-size: 0.88em;
+}
 
-  th, td {
-    padding: 8px 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--d-content-border, var(--primary-low, #e0e0e0));
-    vertical-align: top;
-  }
+.amanuensis-item-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
 
-  th {
-    font-size: 0.78em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--d-content-color-soft, var(--primary-medium, #888));
-    background: var(--d-content-card-background, var(--secondary, #fff));
-  }
+.amanuensis-item-op {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.03em;
+}
+
+.amanuensis-item-type {
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
+}
+
+.amanuensis-item-field {
+  font-size: 0.9em;
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
+  margin-bottom: 6px;
+}
+
+.amanuensis-item-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 
   code {
     font-size: 0.9em;
     word-break: break-all;
-    max-width: 200px;
-    display: inline-block;
   }
+}
+
+.amanuensis-item-value-edited {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
+}
+
+.amanuensis-history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.amanuensis-history-actor {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.amanuensis-history-summary {
+  color: var(--d-content-color-soft, var(--primary-medium, var(--amanuensis-muted-fg)));
 }
 
 h2 {

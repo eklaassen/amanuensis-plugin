@@ -17,5 +17,10 @@ module Amanuensis
     # Discourse's default check_xhr, which would otherwise serve the Ember
     # app bootstrap for non-XHR HTML requests instead of our views.
     skip_before_action :check_xhr
+
+    # Shared doctype/head/container shell (app/views/layouts/amanuensis.html.erb)
+    # for every server-rendered page. Subclasses no longer need `render
+    # layout: false` + their own full HTML document.
+    layout 'amanuensis'
   end
 end
