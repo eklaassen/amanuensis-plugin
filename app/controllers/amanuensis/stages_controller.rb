@@ -50,7 +50,15 @@ module Amanuensis
       raise Discourse::NotFound unless Amanuensis::PipelineStages::ORDER.include?(params[:stage])
     end
 
+    # meeting_id is a NOT NULL FK on stage_runs, so a well-formed upstream
+    # response always has one -- but this guards the case anyway rather
+    # than build "/v1/plugin/meetings/" (a malformed request) from a blank
+    # value. Degrades gracefully (no meeting link, no timeline) instead of
+    # 404ing the whole page over one missing nested field on an otherwise
+    # successful response.
     def fetch_other_runs(meeting_id)
+      return [] if meeting_id.blank?
+
       meeting_result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings/#{meeting_id}")
       meeting_result.ok? ? meeting_result.body['stage_runs'] : []
     end

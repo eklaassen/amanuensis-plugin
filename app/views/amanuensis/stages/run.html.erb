@@ -42,10 +42,12 @@
     </section>
   <% end %>
 
-  <section class="amanuensis-section">
-    <h2>Meeting</h2>
-    <a href="/amanuensis/meetings/<%= @run['meeting_id'] %>" class="amanuensis-pagination-link">View meeting &rarr;</a>
-  </section>
+  <% if @run['meeting_id'].present? %>
+    <section class="amanuensis-section">
+      <h2>Meeting</h2>
+      <a href="/amanuensis/meetings/<%= @run['meeting_id'] %>" class="amanuensis-pagination-link">View meeting &rarr;</a>
+    </section>
+  <% end %>
 
   <% if @other_runs.present? %>
     <section class="amanuensis-section">

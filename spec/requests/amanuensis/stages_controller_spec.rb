@@ -162,5 +162,17 @@ RSpec.describe Amanuensis::StagesController, type: :request do
       expect(response.status).to eq(200)
       expect(response.body).to include('Stage run not found')
     end
+
+    it 'degrades gracefully instead of crashing when the upstream run is missing meeting_id' do
+      malformed = run_body.merge('meeting_id' => nil)
+      stub_request(:get, 'https://amanuensis.example.com/v1/plugin/stages/transcribing/runs/sr1')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: malformed.to_json)
+
+      get '/amanuensis/stages/transcribing/runs/sr1'
+
+      expect(response.status).to eq(200)
+      expect(response.body).to include('Writers Room Standup')
+      expect(response.body).not_to include('View meeting')
+    end
   end
 end
