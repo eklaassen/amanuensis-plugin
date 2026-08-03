@@ -8,6 +8,11 @@
 </head>
 <body class="amanuensis-page">
   <div class="amanuensis-container">
+    <nav class="amanuensis-nav">
+      <a href="/amanuensis/meetings" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path == '/amanuensis' || request.path.start_with?('/amanuensis/meetings') %>">Meetings</a>
+      <a href="/amanuensis/pipeline" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path.start_with?('/amanuensis/pipeline') %>">Active</a>
+      <a href="/amanuensis/outcomes" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path.start_with?('/amanuensis/outcomes') %>">Outcomes</a>
+    </nav>
     <%= yield %>
   </div>
 </body>

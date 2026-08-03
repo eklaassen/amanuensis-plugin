@@ -1,0 +1,39 @@
+<% content_for :title, 'Active Pipeline' %>
+
+<header class="amanuensis-header">
+  <h1>Active Pipeline</h1>
+</header>
+
+<% if @error %>
+  <%= render 'amanuensis/shared/error', message: @error %>
+<% elsif @stage_groups.present? %>
+  <% @stage_groups.each do |group| %>
+    <section class="amanuensis-section">
+      <h2>
+        <%= humanize_stage(group[:stage]) %>
+        <span class="amanuensis-item-count"><%= group[:meetings].length %></span>
+      </h2>
+      <div class="amanuensis-meetings-list">
+        <% group[:meetings].each do |m| %>
+          <a href="/amanuensis/meetings/<%= m['id'] %>" class="amanuensis-meeting-card">
+            <div class="amanuensis-card-header">
+              <h3 class="amanuensis-meeting-title"><%= m['title'] %></h3>
+              <%= render 'amanuensis/shared/badge', label: m['source'].humanize, variant: 'source' %>
+            </div>
+            <div class="amanuensis-card-meta">
+              <span class="amanuensis-meta-item">
+                <%= render 'amanuensis/shared/icon', name: 'clock', size: 14 %>
+                Updated <%= relative_time(m['updated_at']) %>
+              </span>
+              <% if m['current_stage_attempt'].to_i > 1 %>
+                <span class="amanuensis-meta-item">attempt <%= m['current_stage_attempt'] %></span>
+              <% end %>
+            </div>
+          </a>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+<% else %>
+  <%= render 'amanuensis/shared/empty', message: 'Nothing in flight right now.' %>
+<% end %>

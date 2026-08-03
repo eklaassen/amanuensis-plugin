@@ -1,0 +1,47 @@
+<% content_for :title, 'Outcomes' %>
+
+<header class="amanuensis-header">
+  <h1>Outcomes</h1>
+</header>
+
+<div class="amanuensis-chips">
+  <a href="/amanuensis/outcomes?status=complete"
+     class="amanuensis-chip<%= ' amanuensis-chip-active' if @status == 'complete' %>">Complete</a>
+  <a href="/amanuensis/outcomes?status=failed"
+     class="amanuensis-chip<%= ' amanuensis-chip-active' if @status == 'failed' %>">Failed</a>
+</div>
+
+<% if @error %>
+  <%= render 'amanuensis/shared/error', message: @error %>
+<% elsif @meetings.present? %>
+  <div class="amanuensis-table-wrapper">
+    <table class="amanuensis-data-table">
+      <thead>
+        <tr>
+          <th>Meeting</th>
+          <th>Recorded</th>
+          <th>Outcome</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @meetings.each do |m| %>
+          <tr>
+            <td><a href="/amanuensis/meetings/<%= m['id'] %>"><%= m['title'] %></a></td>
+            <td><%= formatted_date(m['recorded_at']) %></td>
+            <td><%= render 'amanuensis/shared/badge', label: m['status'], variant: m['status'] %></td>
+            <td><%= m['failure_reason'] || '—' %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render 'amanuensis/shared/pagination',
+        base_path: '/amanuensis/outcomes',
+        has_more: @pagination['has_more'],
+        next_before: @pagination['next_before'],
+        extra_params: { status: @status } %>
+<% else %>
+  <%= render 'amanuensis/shared/empty', message: 'No meetings here yet.' %>
+<% end %>

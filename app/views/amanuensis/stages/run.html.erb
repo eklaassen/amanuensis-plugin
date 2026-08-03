@@ -1,0 +1,58 @@
+<% content_for :title, "#{humanize_stage(params[:stage])} Run" %>
+
+<a href="/amanuensis/stages/<%= params[:stage] %>" class="amanuensis-back-link">&larr; Back to <%= humanize_stage(params[:stage]) %> runs</a>
+
+<% if @error %>
+  <%= render 'amanuensis/shared/error', message: @error %>
+<% elsif @run %>
+  <header class="amanuensis-header">
+    <h1><%= @run['meeting_title'] %></h1>
+    <div class="amanuensis-header-badges">
+      <%= render 'amanuensis/shared/badge', label: humanize_stage(@run['stage']), variant: 'source' %>
+      <%= render 'amanuensis/shared/badge', label: @run['outcome'], variant: @run['outcome'] %>
+      <% if @run['inferred'] %><span class="amanuensis-inferred-tag">reconstructed</span><% end %>
+    </div>
+  </header>
+
+  <section class="amanuensis-section amanuensis-metadata">
+    <div class="amanuensis-metadata-grid">
+      <%= render 'amanuensis/shared/metadata_item', label: 'Stage', value: humanize_stage(@run['stage']) %>
+      <%= render 'amanuensis/shared/metadata_item', label: 'Outcome', value: @run['outcome'].capitalize %>
+      <%= render 'amanuensis/shared/metadata_item', label: 'Attempt', value: @run['attempt'] %>
+      <%= render 'amanuensis/shared/metadata_item', label: 'Started', value: formatted_date(@run['started_at']) %>
+      <% if @run['finished_at'] %>
+        <%= render 'amanuensis/shared/metadata_item', label: 'Finished', value: formatted_date(@run['finished_at']) %>
+      <% end %>
+      <% if @run['duration_ms'] %>
+        <%= render 'amanuensis/shared/metadata_item', label: 'Duration', value: format_duration_ms(@run['duration_ms']) %>
+      <% end %>
+      <% if @run['job_id'] %>
+        <%= render 'amanuensis/shared/metadata_item', label: 'Job ID', value: @run['job_id'] %>
+      <% end %>
+      <% if @run['rewind_to'] %>
+        <%= render 'amanuensis/shared/metadata_item', label: 'Rewound to', value: humanize_stage(@run['rewind_to']) %>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @run['failure_reason'].present? %>
+    <section class="amanuensis-section">
+      <h2>Error</h2>
+      <%= render 'amanuensis/shared/error', message: "#{@run['error_code']}: #{@run['failure_reason']}" %>
+    </section>
+  <% end %>
+
+  <% if @run['meeting_id'].present? %>
+    <section class="amanuensis-section">
+      <h2>Meeting</h2>
+      <a href="/amanuensis/meetings/<%= @run['meeting_id'] %>" class="amanuensis-pagination-link">View meeting &rarr;</a>
+    </section>
+  <% end %>
+
+  <% if @other_runs.present? %>
+    <section class="amanuensis-section">
+      <h2>Pipeline Timeline</h2>
+      <%= render 'amanuensis/shared/stage_timeline', stage_runs: @other_runs %>
+    </section>
+  <% end %>
+<% end %>

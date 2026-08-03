@@ -4,7 +4,9 @@ module Amanuensis
   class MeetingsController < Amanuensis::ApplicationController
     before_action :ensure_viewer
 
-    helper_method :formatted_date, :format_duration, :speaker_color_style, :format_value, :sanitized_summary
+    include Amanuensis::Formatting
+
+    helper_method :speaker_color_style, :format_value, :sanitized_summary
 
     PAGE_SIZE = 25
 
@@ -37,6 +39,7 @@ module Amanuensis
         @meeting = @data['meeting']
         @proposal = @data['proposal']
         @history = @data['history']
+        @stage_runs = @data['stage_runs']
         @notesbot_turns = @meeting['notesbot_turns']
 
         if @meeting['source'] == 'notesbot' && @notesbot_turns.present?
@@ -48,30 +51,6 @@ module Amanuensis
     end
 
     private
-
-    def formatted_date(iso_string)
-      return '' if iso_string.nil?
-
-      Time.parse(iso_string).strftime('%B %d, %Y at %I:%M %p')
-    rescue ArgumentError
-      iso_string.to_s
-    end
-
-    def format_duration(seconds)
-      return '' if seconds.nil?
-
-      hrs = seconds / 3600
-      mins = (seconds % 3600) / 60
-      secs = seconds % 60
-
-      if hrs > 0
-        format('%dh %dm', hrs, mins)
-      elsif mins > 0
-        format('%dm %ds', mins, secs)
-      else
-        format('%ds', secs)
-      end
-    end
 
     SPEAKER_COLORS = %w[
       #4A90D9 #E8734A #50B86C #D94A8E #B86CE8
