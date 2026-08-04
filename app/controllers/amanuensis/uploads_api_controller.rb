@@ -22,12 +22,17 @@ module Amanuensis
       filename = UploadPolicy.sanitize_filename(params[:filename])
       UploadPolicy.validate!(filename: filename, size_bytes: params[:size_bytes])
 
+      # Braces are load-bearing: post's signature is (path, body = {},
+      # idempotency_key:), so bare `filename:` etc. bind as keyword arguments
+      # and raise ArgumentError instead of becoming the body hash.
       result = ApiClient.admin.post(
         '/v1/plugin/uploads',
-        filename: filename,
-        size_bytes: params[:size_bytes].to_i,
-        title: upload_title,
-        recorded_at: recorded_at
+        {
+          filename: filename,
+          size_bytes: params[:size_bytes].to_i,
+          title: upload_title,
+          recorded_at: recorded_at
+        }
       )
 
       return render_upstream_error(result) unless result.ok?
@@ -53,9 +58,11 @@ module Amanuensis
 
       result = ApiClient.admin.post(
         "/v1/plugin/uploads/#{upload_id}/complete",
-        filename: filename,
-        title: upload_title,
-        recorded_at: recorded_at
+        {
+          filename: filename,
+          title: upload_title,
+          recorded_at: recorded_at
+        }
       )
 
       return render_upstream_error(result) unless result.ok?
