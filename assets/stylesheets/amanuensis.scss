@@ -693,3 +693,104 @@ h2 {
   font-size: 0.85em;
   color: var(--amanuensis-danger-fg);
 }
+
+/* ── Upload form ─────────────────────────────────────────────────────── */
+
+.amanuensis-page-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  color: var(--amanuensis-surface-fg);
+}
+
+.amanuensis-hint {
+  margin: 0 0 20px;
+  color: var(--amanuensis-muted-fg);
+  font-size: 0.9rem;
+}
+
+.amanuensis-upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+  padding: 20px;
+  background: var(--amanuensis-card-bg);
+  border: 1px solid var(--amanuensis-border);
+  border-radius: 10px;
+}
+
+.amanuensis-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.amanuensis-field-label {
+  font-size: 0.85rem;
+  color: var(--amanuensis-muted-fg);
+}
+
+.amanuensis-field input {
+  padding: 8px 10px;
+  border: 1px solid var(--amanuensis-border);
+  border-radius: 6px;
+  background: var(--amanuensis-surface-bg);
+  color: var(--amanuensis-surface-fg);
+  font: inherit;
+  max-width: 100%;
+}
+
+.amanuensis-button {
+  align-self: flex-start;
+  padding: 9px 18px;
+  border: 1px solid var(--amanuensis-border);
+  border-radius: 6px;
+  background: var(--amanuensis-hover-bg);
+  color: var(--amanuensis-surface-fg);
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.amanuensis-upload-progress {
+  max-width: 520px;
+  margin-top: 16px;
+}
+
+.amanuensis-progress-track {
+  height: 8px;
+  background: var(--amanuensis-hover-bg);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.amanuensis-progress-bar {
+  width: 0;
+  height: 100%;
+  background: var(--amanuensis-link);
+  transition: width 0.2s ease;
+}
+
+.amanuensis-upload-message {
+  max-width: 520px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--amanuensis-border);
+}
+
+.amanuensis-upload-message-success {
+  background: var(--amanuensis-success-bg);
+  color: var(--amanuensis-success-fg);
+}
+
+.amanuensis-upload-message-error {
+  background: var(--amanuensis-danger-bg);
+  border-color: var(--amanuensis-danger-border);
+  color: var(--amanuensis-danger-fg);
+}
+
