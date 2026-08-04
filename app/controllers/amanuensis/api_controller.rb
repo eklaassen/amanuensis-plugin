@@ -21,5 +21,23 @@ module Amanuensis
     protect_from_forgery with: :exception
 
     include Amanuensis::AccessControl
+
+    private
+
+    # JSON callers get 403 where the HTML pages 404. Hiding a page's existence
+    # from someone who shouldn't know about it is worth a 404; for an XHR the
+    # caller already knows the endpoint exists, and a 404 there just makes a
+    # permissions problem look like a routing bug.
+    #
+    # These override AccessControl's versions -- a method on the class wins
+    # over one from an included module -- so the HTML controllers that share
+    # the concern keep their 404 behaviour, which their specs assert.
+    def ensure_writer
+      raise Discourse::InvalidAccess unless Amanuensis::Permissions.writer?(current_user)
+    end
+
+    def ensure_builder
+      raise Discourse::InvalidAccess unless Amanuensis::Permissions.builder?(current_user)
+    end
   end
 end
