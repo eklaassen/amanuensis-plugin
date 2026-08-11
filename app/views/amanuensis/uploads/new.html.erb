@@ -1,0 +1,172 @@
+<% content_for :title, 'Upload a recording — Amanuensis' %>
+
+<h1 class="amanuensis-page-title">Upload a recording</h1>
+<p class="amanuensis-hint">
+  The file goes straight to storage from your browser, then enters the pipeline
+  for transcription. Allowed: <%= @allowed_extensions.join(', ') %>.
+  Maximum <%= @max_bytes / 1.megabyte %> MB.
+</p>
+
+<form id="amanuensis-upload-form" class="amanuensis-upload-form" autocomplete="off">
+  <label class="amanuensis-field">
+    <span class="amanuensis-field-label">Title</span>
+    <input type="text" id="amanuensis-upload-title" placeholder="Writers' Room" required>
+  </label>
+
+  <label class="amanuensis-field">
+    <span class="amanuensis-field-label">Recorded at</span>
+    <input type="datetime-local" id="amanuensis-upload-recorded-at" required>
+  </label>
+
+  <label class="amanuensis-field">
+    <span class="amanuensis-field-label">Recording</span>
+    <input type="file" id="amanuensis-upload-file"
+           accept="<%= @allowed_extensions.map { |e| ".#{e}" }.join(',') %>" required>
+  </label>
+
+  <button type="submit" id="amanuensis-upload-submit" class="amanuensis-button">Upload</button>
+</form>
+
+<div id="amanuensis-upload-progress" class="amanuensis-upload-progress" hidden>
+  <div class="amanuensis-progress-track"><div id="amanuensis-progress-bar" class="amanuensis-progress-bar"></div></div>
+  <p id="amanuensis-progress-label" class="amanuensis-hint"></p>
+</div>
+
+<div id="amanuensis-upload-message" class="amanuensis-upload-message" hidden></div>
+
+<script>
+  (function () {
+    'use strict';
+
+    var MAX_BYTES = <%= @max_bytes %>;
+    var ALLOWED = <%= raw @allowed_extensions.to_json %>;
+    var CSRF = document.querySelector('meta[name="csrf-token"]');
+
+    var form = document.getElementById('amanuensis-upload-form');
+    var fileInput = document.getElementById('amanuensis-upload-file');
+    var titleInput = document.getElementById('amanuensis-upload-title');
+    var recordedAtInput = document.getElementById('amanuensis-upload-recorded-at');
+    var submit = document.getElementById('amanuensis-upload-submit');
+    var progress = document.getElementById('amanuensis-upload-progress');
+    var progressBar = document.getElementById('amanuensis-progress-bar');
+    var progressLabel = document.getElementById('amanuensis-progress-label');
+    var message = document.getElementById('amanuensis-upload-message');
+
+    function show(text, kind) {
+      message.hidden = false;
+      message.textContent = text;
+      message.className = 'amanuensis-upload-message amanuensis-upload-message-' + kind;
+    }
+
+    function extensionOf(name) {
+      var parts = String(name).split('.');
+      return parts.length > 1 ? parts.pop().toLowerCase() : '';
+    }
+
+    function postJson(url, payload) {
+      return fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': CSRF ? CSRF.content : '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (!res.ok) {
+            throw new Error((body.errors && body.errors[0]) || 'Request failed (' + res.status + ')');
+          }
+          return body;
+        });
+      });
+    }
+
+    // XHR rather than fetch: fetch still has no upload progress event, and at
+    // 1.5 GB a bar that never moves is indistinguishable from a hang.
+    function putFile(url, file) {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('PUT', url, true);
+        xhr.upload.onprogress = function (e) {
+          if (!e.lengthComputable) return;
+          var pct = Math.round((e.loaded / e.total) * 100);
+          progressBar.style.width = pct + '%';
+          progressLabel.textContent = 'Uploading… ' + pct + '%';
+        };
+        xhr.onload = function () {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error('Upload failed (' + xhr.status + ')'));
+        };
+        xhr.onerror = function () { reject(new Error('Upload failed — network error')); };
+        xhr.send(file);
+      });
+    }
+
+    // preventDefault() is the modern trigger; returnValue is kept for
+    // Chrome/Edge < 119. Returning a string is the legacy form and browsers
+    // ignore the text anyway -- the dialog always shows their own wording.
+    function warnBeforeUnload(e) {
+      e.preventDefault();
+      e.returnValue = true;
+    }
+
+    function setBusy(busy) {
+      submit.disabled = busy;
+      progress.hidden = !busy;
+      // Property assignment rather than addEventListener so clearing it is
+      // just a null, with no stale-reference risk on repeat uploads.
+      window.onbeforeunload = busy ? warnBeforeUnload : null;
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      message.hidden = true;
+
+      var file = fileInput.files[0];
+      if (!file) return show('Choose a recording first.', 'error');
+
+      // Mirrors the server checks purely for fast feedback — the server and
+      // the pipeline both re-validate, and neither trusts this.
+      if (ALLOWED.indexOf(extensionOf(file.name)) === -1) {
+        return show('That file type is not allowed. Allowed: ' + ALLOWED.join(', ') + '.', 'error');
+      }
+      if (file.size > MAX_BYTES) {
+        return show('That file is too large.', 'error');
+      }
+
+      var meta = {
+        filename: file.name,
+        size_bytes: file.size,
+        title: titleInput.value,
+        recorded_at: recordedAtInput.value
+      };
+
+      setBusy(true);
+      progressBar.style.width = '0%';
+      progressLabel.textContent = 'Preparing…';
+
+      postJson('/amanuensis/api/uploads', meta)
+        .then(function (ticket) {
+          return putFile(ticket.upload_url, file).then(function () {
+            progressLabel.textContent = 'Finishing…';
+            return postJson('/amanuensis/api/uploads/' + encodeURIComponent(ticket.upload_id) + '/complete', meta);
+          });
+        })
+        .then(function (done) {
+          setBusy(false);
+          progress.hidden = true;
+          form.reset();
+          show('Uploaded. The recording is now being transcribed' +
+               (done.meeting_id ? ' (meeting ' + done.meeting_id + ').' : '.'), 'success');
+        })
+        .catch(function (err) {
+          setBusy(false);
+          progress.hidden = true;
+          show(err.message, 'error');
+        });
+    });
+  })();
+</script>

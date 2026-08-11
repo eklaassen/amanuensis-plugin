@@ -12,6 +12,9 @@
       <a href="/amanuensis/meetings" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path == '/amanuensis' || request.path.start_with?('/amanuensis/meetings') %>">Meetings</a>
       <a href="/amanuensis/pipeline" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path.start_with?('/amanuensis/pipeline') %>">Active</a>
       <a href="/amanuensis/outcomes" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path.start_with?('/amanuensis/outcomes') %>">Outcomes</a>
+      <% if Amanuensis::Permissions.writer?(current_user) %>
+        <a href="/amanuensis/uploads/new" class="amanuensis-nav-link<%= ' amanuensis-nav-link-active' if request.path.start_with?('/amanuensis/uploads') %>">Upload</a>
+      <% end %>
     </nav>
     <%= yield %>
   </div>

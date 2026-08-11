@@ -9,6 +9,13 @@ Amanuensis::Engine.routes.draw do
   get '/stages/:stage' => 'stages#show'
   get '/stages/:stage/runs/:run_id' => 'stages#run'
   get '/outcomes' => 'outcomes#index'
+
+  get '/uploads/new' => 'uploads#new'
+
+  scope '/api', defaults: { format: :json } do
+    post '/uploads' => 'uploads_api#create'
+    post '/uploads/:upload_id/complete' => 'uploads_api#complete'
+  end
 end
 
 Discourse::Application.routes.draw do

@@ -6,3 +6,12 @@ en:
     amanuensis_admin_key: "Admin key for meeting ingestion (ADMIN_SECRET)"
     amanuensis_viewing_group: "Discourse group whose members can view meetings (leave blank for staff only)"
     amanuensis_writing_group: "Discourse group whose members can flag agenda candidates and upload source material. Implies view access. Leave blank for staff only."
+  amanuensis:
+    uploads:
+      default_title: "Untitled recording"
+      errors:
+        missing_file: "Choose a recording to upload."
+        empty_file: "That file appears to be empty."
+        extension_not_allowed: "That file type is not allowed. Allowed: %{allowed}."
+        too_large: "That file is too large. Maximum %{max_mb} MB."
+        upstream: "Could not reach the Amanuensis API (status %{status})."
