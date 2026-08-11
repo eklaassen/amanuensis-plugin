@@ -16,6 +16,14 @@ module Amanuensis
     # forgotten ticket does not linger.
     OWNERSHIP_TTL = 6.hours
 
+    # Same guard as MeetingsController::MEETING_ID_FORMAT and
+    # StagesController::RUN_ID_FORMAT: this id is interpolated into an upstream
+    # URL, so `../..` in it would traverse to a different endpoint. The
+    # ownership check below already rejects any id we did not mint, but that
+    # leaves one check between user input and the URL -- and a later refactor
+    # that moves or bypasses it would silently make traversal reachable.
+    UPLOAD_ID_FORMAT = /\A[\w-]+\z/
+
     def create
       RateLimiter.new(current_user, 'amanuensis-upload-presign', PRESIGN_LIMIT_PER_HOUR, 1.hour).performed!
 
@@ -51,6 +59,7 @@ module Amanuensis
       RateLimiter.new(current_user, 'amanuensis-upload-complete', COMPLETE_LIMIT_PER_HOUR, 1.hour).performed!
 
       upload_id = params[:upload_id].to_s
+      raise Discourse::InvalidAccess unless upload_id.match?(UPLOAD_ID_FORMAT)
       raise Discourse::InvalidAccess unless owns_upload?(upload_id)
 
       filename = UploadPolicy.sanitize_filename(params[:filename])

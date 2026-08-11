@@ -166,5 +166,17 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
       expect(response.status).to eq(403)
     end
+
+    it 'refuses a traversal-shaped upload id without calling upstream' do
+      # The id is interpolated into the upstream URL, so `../..` would reach a
+      # different endpoint. Ownership alone would already reject this, but the
+      # format guard means traversal never depends on that one check.
+      stub_request(:post, %r{amanuensis\.example\.com}).to_return(status: 201, body: '{}')
+
+      post '/amanuensis/api/uploads/..%2F..%2Fadmin/complete', params: valid_payload
+
+      expect(response.status).to eq(403)
+      expect(a_request(:post, %r{amanuensis\.example\.com})).not_to have_been_made
+    end
   end
 end
