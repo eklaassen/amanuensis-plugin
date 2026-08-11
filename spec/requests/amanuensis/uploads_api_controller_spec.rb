@@ -167,13 +167,15 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
       expect(response.status).to eq(403)
     end
 
-    it 'refuses a traversal-shaped upload id without calling upstream' do
-      # The id is interpolated into the upstream URL, so `../..` would reach a
-      # different endpoint. Ownership alone would already reject this, but the
-      # format guard means traversal never depends on that one check.
+    it 'refuses an upload id with characters outside the allowed format' do
+      # The id is interpolated into the upstream URL, so anything outside
+      # [\w-] is refused before the request is built. Note an encoded-slash
+      # id (`..%2F..%2Fadmin`) never gets this far -- Rails will not match a
+      # path segment containing a slash, so routing rejects it first. This
+      # guard is the second layer, covering everything that does route.
       stub_request(:post, %r{amanuensis\.example\.com}).to_return(status: 201, body: '{}')
 
-      post '/amanuensis/api/uploads/..%2F..%2Fadmin/complete', params: valid_payload
+      post '/amanuensis/api/uploads/abc%20def/complete', params: valid_payload
 
       expect(response.status).to eq(403)
       expect(a_request(:post, %r{amanuensis\.example\.com})).not_to have_been_made
