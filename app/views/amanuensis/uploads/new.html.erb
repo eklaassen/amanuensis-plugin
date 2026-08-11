@@ -105,11 +105,20 @@
       });
     }
 
+    // preventDefault() is the modern trigger; returnValue is kept for
+    // Chrome/Edge < 119. Returning a string is the legacy form and browsers
+    // ignore the text anyway -- the dialog always shows their own wording.
+    function warnBeforeUnload(e) {
+      e.preventDefault();
+      e.returnValue = true;
+    }
+
     function setBusy(busy) {
       submit.disabled = busy;
       progress.hidden = !busy;
-      if (busy) window.onbeforeunload = function () { return 'An upload is in progress.'; };
-      else window.onbeforeunload = null;
+      // Property assignment rather than addEventListener so clearing it is
+      // just a null, with no stale-reference risk on repeat uploads.
+      window.onbeforeunload = busy ? warnBeforeUnload : null;
     }
 
     form.addEventListener('submit', function (event) {
