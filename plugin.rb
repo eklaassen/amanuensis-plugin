@@ -17,3 +17,11 @@ module ::Amanuensis
 end
 
 require_relative 'lib/amanuensis/engine'
+
+after_initialize do
+  # Single source of truth stays Amanuensis::Permissions -- the sidebar
+  # initializer reads these flags instead of reimplementing group-membership
+  # checks in JS.
+  add_to_serializer(:current_user, :can_view_amanuensis) { Amanuensis::Permissions.viewer?(object) }
+  add_to_serializer(:current_user, :can_write_amanuensis) { Amanuensis::Permissions.writer?(object) }
+end
