@@ -8,6 +8,7 @@ RSpec.describe 'Amanuensis plugin initialization' do
   fab!(:other_group) { Fabricate(:group) }
 
   before do
+    SiteSetting.amanuensis_enabled = true
     SiteSetting.amanuensis_viewing_group = ''
     SiteSetting.amanuensis_writing_group = ''
   end
