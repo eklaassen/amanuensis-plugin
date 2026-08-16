@@ -2,3 +2,8 @@ en:
   js:
     amanuensis:
       title: "Amanuensis"
+      sidebar:
+        meetings: "Meetings"
+        pipeline: "Active"
+        outcomes: "Outcomes"
+        upload: "Upload"

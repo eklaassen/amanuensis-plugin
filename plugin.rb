@@ -11,6 +11,9 @@ register_asset 'stylesheets/amanuensis.scss'
 enabled_site_setting :amanuensis_enabled
 
 register_svg_icon 'clipboard-list' if respond_to?(:register_svg_icon)
+register_svg_icon 'list-check' if respond_to?(:register_svg_icon)
+register_svg_icon 'flag-checkered' if respond_to?(:register_svg_icon)
+register_svg_icon 'upload' if respond_to?(:register_svg_icon)
 
 module ::Amanuensis
   PLUGIN_NAME = 'amanuensis'
