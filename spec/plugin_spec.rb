@@ -13,7 +13,7 @@ RSpec.describe 'Amanuensis plugin initialization' do
   end
 
   def serialized_flags(user)
-    CurrentUserSerializer.new(user, scope: Guardian.new(user), root: false).as_json
+    CurrentUserSerializer.new(user, scope: Guardian.new(user), root: false).as_json.deep_symbolize_keys
   end
 
   describe 'current_user serializer' do
