@@ -35,38 +35,14 @@ export default apiInitializer("1.8.0", (api) => {
     return;
   }
 
-  // /amanuensis/* is mostly still a plain server-rendered Rails engine, not
-  // an Ember route. Without this, Discourse's global click handler tries to
-  // resolve it client-side first and lands on Ember's own not-found page
-  // instead of ever requesting the page from the server.
-  //
-  // EMBER_ROUTE_PREFIXES lists the pages that have since been converted to
-  // real Ember routes (see amanuensis-route-map.js) -- those should keep
-  // their client-side transition rather than being forced through a full
-  // reload. A prefix, not an exact path, because some of these routes have
-  // dynamic segments (/amanuensis/stages/:stage/runs/:run_id). Append to
-  // this list as more pages get converted.
-  const EMBER_ROUTE_PREFIXES = [
-    "/amanuensis/meetings",
-    "/amanuensis/pipeline",
-    "/amanuensis/stages",
-    "/amanuensis/outcomes",
-  ];
-
-  api.registerValueTransformer(
-    "full-page-refresh-on-navigation",
-    ({ value, context }) => {
-      const url = context?.url;
-      if (!url?.startsWith("/amanuensis")) {
-        return value;
-      }
-      const path = url.split("?")[0];
-      if (EMBER_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
-        return value;
-      }
-      return true;
-    }
-  );
+  // #23 added a full-page-refresh-on-navigation transformer here, back when
+  // /amanuensis/* was a plain server-rendered Rails engine and Ember's
+  // client-side router would resolve a sidebar click before the request
+  // ever reached the server, landing on Ember's own not-found page. Every
+  // /amanuensis/* page is a real Ember route now (see
+  // amanuensis-route-map.js), so that workaround no longer has anything
+  // left to work around -- removed rather than carried forward as an
+  // always-matching allowlist.
 
   const currentUser = api.getCurrentUser();
   if (!currentUser?.can_view_amanuensis) {

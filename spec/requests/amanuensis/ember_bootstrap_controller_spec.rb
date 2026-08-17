@@ -24,6 +24,7 @@ RSpec.describe Amanuensis::EmberBootstrapController, type: :request do
     /amanuensis/stages/transcribing
     /amanuensis/stages/transcribing/runs/some-run-id
     /amanuensis/outcomes
+    /amanuensis/uploads/new
   ].freeze
 
   EMBER_PATHS.each do |path|

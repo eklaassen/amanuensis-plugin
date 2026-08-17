@@ -1,0 +1,64 @@
+{{page-title "Upload a recording"}}
+
+<div class="amanuensis-container">
+  <h1 class="amanuensis-page-title">Upload a recording</h1>
+  <p class="amanuensis-hint">
+    The file goes straight to storage from your browser, then enters the pipeline
+    for transcription. Allowed:
+    {{this.allowedExtensionsHint}}.
+    Maximum
+    {{this.maxMb}}
+    MB.
+  </p>
+
+  <form class="amanuensis-upload-form" autocomplete="off" {{on "submit" this.submit}}>
+    <label class="amanuensis-field">
+      <span class="amanuensis-field-label">Title</span>
+      <input
+        type="text"
+        id="amanuensis-upload-title"
+        placeholder="Writers' Room"
+        value={{this.title}}
+        {{on "input" this.updateTitle}}
+        required
+      />
+    </label>
+
+    <label class="amanuensis-field">
+      <span class="amanuensis-field-label">Recorded at</span>
+      <input
+        type="datetime-local"
+        id="amanuensis-upload-recorded-at"
+        value={{this.recordedAt}}
+        {{on "input" this.updateRecordedAt}}
+        required
+      />
+    </label>
+
+    <label class="amanuensis-field">
+      <span class="amanuensis-field-label">Recording</span>
+      <input
+        type="file"
+        id="amanuensis-upload-file"
+        accept={{this.acceptAttr}}
+        {{on "change" this.chooseFile}}
+        required
+      />
+    </label>
+
+    <button type="submit" class="amanuensis-button" disabled={{this.busy}}>Upload</button>
+  </form>
+
+  {{#if this.busy}}
+    <div class="amanuensis-upload-progress">
+      <div class="amanuensis-progress-track">
+        <div class="amanuensis-progress-bar" style="width: {{this.progressPercent}}%"></div>
+      </div>
+      <p class="amanuensis-hint">{{this.progressLabel}}</p>
+    </div>
+  {{/if}}
+
+  {{#if this.message}}
+    <div class="amanuensis-upload-message amanuensis-upload-message-{{this.messageKind}}">{{this.message}}</div>
+  {{/if}}
+</div>

@@ -9,14 +9,13 @@ module Amanuensis
   # pattern for Outcomes; consolidated here now that more pages are
   # converting to Ember and would otherwise each need an identical copy.
   #
-  # Not inheriting from Amanuensis::ApplicationController is what makes this
-  # work -- that base class skips check_xhr and forces layout 'amanuensis'
-  # so the still-server-rendered pages can render real HTML. This wants the
-  # opposite: check_xhr's default behavior (raise RenderEmpty for a plain
-  # non-XHR, non-JSON GET) is exactly what makes Discourse core render
-  # `default/empty` inside the normal "application" layout -- the same
-  # bootstrap every pure-Ember Discourse page relies on. Once that shell
-  # boots, Ember's route-map takes over and renders the real page
+  # Inheriting straight from Discourse's own ::ApplicationController (not
+  # skipping check_xhr the way a plain-HTML-rendering controller would) is
+  # what makes this work: check_xhr's default behavior (raise RenderEmpty
+  # for a plain non-XHR, non-JSON GET) is exactly what makes Discourse core
+  # render `default/empty` inside the normal "application" layout -- the
+  # same bootstrap every pure-Ember Discourse page relies on. Once that
+  # shell boots, Ember's route-map takes over and renders the real page
   # client-side by calling that page's own *ApiController.
   class EmberBootstrapController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
@@ -25,7 +24,7 @@ module Amanuensis
     # ::ApplicationController already declares this -- it can't follow the
     # inheritance across the gem boundary, so it flags every subclass as
     # unprotected without an explicit declaration here too (same reasoning
-    # as Amanuensis::ApplicationController and Amanuensis::ApiController).
+    # as Amanuensis::ApiController).
     protect_from_forgery with: :exception
 
     # Real access control lives where the actual data is -- each page's own

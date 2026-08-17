@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
 Amanuensis::Engine.routes.draw do
-  get '/uploads/new' => 'uploads#new'
-
-  # Meetings, Pipeline, Stages, and Outcomes are Ember-rendered
-  # (assets/javascripts/discourse/routes/amanuensis-meetings.js,
-  # amanuensis-meeting.js, amanuensis-pipeline.js, amanuensis-stage-runs.js,
-  # amanuensis-stage-run.js, and amanuensis-outcomes.js), but a fresh
+  # Every /amanuensis/* page is Ember-rendered now (see
+  # assets/javascripts/discourse/amanuensis-route-map.js), but a fresh
   # browser load/refresh/new-tab still needs a real Rails route to boot the
   # Discourse app shell before Ember's own router can take over -- there's
   # nothing after this engine's mount for the request to fall through to
@@ -20,6 +16,7 @@ Amanuensis::Engine.routes.draw do
   get '/stages/:stage' => 'ember_bootstrap#show'
   get '/stages/:stage/runs/:run_id' => 'ember_bootstrap#show'
   get '/outcomes' => 'ember_bootstrap#show'
+  get '/uploads/new' => 'ember_bootstrap#show'
 
   scope '/api', defaults: { format: :json } do
     get '/meetings' => 'meetings_api#index'
@@ -28,6 +25,7 @@ Amanuensis::Engine.routes.draw do
     get '/stages/:stage/runs' => 'stages_api#show'
     get '/stages/:stage/runs/:run_id' => 'stages_api#run'
     get '/outcomes' => 'outcomes_api#index'
+    get '/uploads/config' => 'uploads_api#upload_config'
     post '/uploads' => 'uploads_api#create'
     post '/uploads/:upload_id/complete' => 'uploads_api#complete'
   end
