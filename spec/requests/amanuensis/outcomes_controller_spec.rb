@@ -18,7 +18,12 @@ RSpec.describe Amanuensis::OutcomesController, type: :request do
     get '/amanuensis/outcomes'
 
     expect(response.status).to eq(200)
-    expect(response).to render_template('default/empty')
+    # Asserts on the actual rendered output rather than the template name
+    # (render_template/assert_template needs the rails-controller-testing
+    # gem, which this Discourse test harness doesn't bundle) -- main-outlet
+    # is what Ember mounts into, so its presence is direct evidence the real
+    # app shell booted rather than the old plain-HTML page.
+    expect(response.body).to include('main-outlet')
   end
 
   it 'renders the Discourse app shell for a signed-in user with no special access' do
@@ -27,6 +32,6 @@ RSpec.describe Amanuensis::OutcomesController, type: :request do
     get '/amanuensis/outcomes'
 
     expect(response.status).to eq(200)
-    expect(response).to render_template('default/empty')
+    expect(response.body).to include('main-outlet')
   end
 end

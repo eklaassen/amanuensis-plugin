@@ -18,6 +18,13 @@ module Amanuensis
   class OutcomesController < ::ApplicationController
     requires_plugin Amanuensis::PLUGIN_NAME
 
+    # Explicit even though CodeQL can't see that Discourse core's own
+    # ::ApplicationController already declares this -- it can't follow the
+    # inheritance across the gem boundary, so it flags every subclass as
+    # unprotected without an explicit declaration here too (same reasoning
+    # as Amanuensis::ApplicationController and Amanuensis::ApiController).
+    protect_from_forgery with: :exception
+
     # Real access control lives where the actual data is: OutcomesApiController
     # returns 403 for a non-writer/anonymous request, and the Ember route's
     # beforeModel redirects them client-side. Gating this action too would be
