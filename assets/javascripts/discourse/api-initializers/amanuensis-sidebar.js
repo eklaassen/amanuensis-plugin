@@ -35,6 +35,20 @@ export default apiInitializer("1.8.0", (api) => {
     return;
   }
 
+  // /amanuensis/* is a plain server-rendered Rails engine, not an Ember
+  // route. Without this, Discourse's global click handler tries to resolve
+  // it client-side first and lands on Ember's own not-found page instead of
+  // ever requesting the page from the server.
+  api.registerValueTransformer(
+    "full-page-refresh-on-navigation",
+    ({ value, context }) => {
+      if (context?.url?.startsWith("/amanuensis")) {
+        return true;
+      }
+      return value;
+    }
+  );
+
   const currentUser = api.getCurrentUser();
   if (!currentUser?.can_view_amanuensis) {
     return;
