@@ -1,0 +1,70 @@
+{{page-title "Outcomes"}}
+
+<div class="amanuensis-container">
+  <header class="amanuensis-header">
+    <h1>Outcomes</h1>
+  </header>
+
+  <div class="amanuensis-chips">
+    <LinkTo
+      @route="amanuensis-outcomes"
+      @query={{hash status="complete" before=null}}
+      class="amanuensis-chip {{if (eq this.status "complete") "amanuensis-chip-active"}}"
+    >Complete</LinkTo>
+    <LinkTo
+      @route="amanuensis-outcomes"
+      @query={{hash status="failed" before=null}}
+      class="amanuensis-chip {{if (eq this.status "failed") "amanuensis-chip-active"}}"
+    >Failed</LinkTo>
+  </div>
+
+  {{#if this.model.error}}
+    <div class="amanuensis-error">
+      <p>{{this.model.error}}</p>
+    </div>
+  {{else if this.model.meetings.length}}
+    <div class="amanuensis-table-wrapper">
+      <table class="amanuensis-data-table">
+        <thead>
+          <tr>
+            <th>Meeting</th>
+            <th>Recorded</th>
+            <th>Outcome</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this.model.meetings as |meeting|}}
+            <tr>
+              <td><a href="/amanuensis/meetings/{{meeting.id}}">{{meeting.title}}</a></td>
+              <td>{{meeting.recorded_at}}</td>
+              <td>
+                <span class="amanuensis-badge amanuensis-badge-{{meeting.status}}">{{meeting.status}}</span>
+              </td>
+              <td>{{if meeting.failure_reason meeting.failure_reason "—"}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="amanuensis-pagination">
+      {{#if this.model.pagination.has_more}}
+        <LinkTo
+          @route="amanuensis-outcomes"
+          @query={{hash status=this.status before=this.model.pagination.next_before}}
+          class="amanuensis-pagination-link"
+        >&larr; Older</LinkTo>
+      {{/if}}
+      <LinkTo
+        @route="amanuensis-outcomes"
+        @query={{hash status=this.status before=null}}
+        class="amanuensis-pagination-link"
+      >Newest &rarr;</LinkTo>
+    </div>
+  {{else}}
+    <div class="amanuensis-empty">
+      <p>No meetings here yet.</p>
+    </div>
+  {{/if}}
+</div>
