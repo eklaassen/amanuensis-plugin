@@ -86,10 +86,14 @@
 
     // XHR rather than fetch: fetch still has no upload progress event, and at
     // 1.5 GB a bar that never moves is indistinguishable from a hang.
-    function putFile(url, file) {
+    function putFile(url, file, contentType) {
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open('PUT', url, true);
+        // Must match the type the server signed. Left alone, the browser sends
+        // whatever it infers from the file (audio/x-m4a rather than audio/mp4,
+        // or nothing), and the signature check fails.
+        if (contentType) xhr.setRequestHeader('Content-Type', contentType);
         xhr.upload.onprogress = function (e) {
           if (!e.lengthComputable) return;
           var pct = Math.round((e.loaded / e.total) * 100);
@@ -150,7 +154,7 @@
 
       postJson('/amanuensis/api/uploads', meta)
         .then(function (ticket) {
-          return putFile(ticket.upload_url, file).then(function () {
+          return putFile(ticket.upload_url, file, ticket.content_type).then(function () {
             progressLabel.textContent = 'Finishing…';
             return postJson('/amanuensis/api/uploads/' + encodeURIComponent(ticket.upload_id) + '/complete', meta);
           });
