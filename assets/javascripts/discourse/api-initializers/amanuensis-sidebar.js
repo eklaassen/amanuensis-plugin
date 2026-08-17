@@ -44,7 +44,7 @@ export default apiInitializer("1.8.0", (api) => {
   // Ember routes (see amanuensis-route-map.js) -- those should keep their
   // client-side transition rather than being forced through a full reload.
   // Append to this list as more pages get converted.
-  const EMBER_ROUTES = ["/amanuensis/outcomes"];
+  const EMBER_ROUTES = ["/amanuensis/pipeline", "/amanuensis/outcomes"];
 
   api.registerValueTransformer(
     "full-page-refresh-on-navigation",

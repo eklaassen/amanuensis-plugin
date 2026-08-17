@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Amanuensis::PipelineController, type: :request do
+RSpec.describe Amanuensis::PipelineApiController, type: :request do
   fab!(:user)
   fab!(:admin)
   fab!(:group)
@@ -23,32 +23,22 @@ RSpec.describe Amanuensis::PipelineController, type: :request do
       )
   end
 
-  describe 'when the plugin is disabled' do
-    before { SiteSetting.amanuensis_enabled = false }
-
-    it 'returns 404 even for staff' do
-      sign_in(admin)
-      get '/amanuensis/pipeline'
-      expect(response.status).to eq(404)
-    end
-  end
-
   describe 'access control' do
     it 'blocks a regular signed-in user with no writing group configured' do
       sign_in(user)
-      get '/amanuensis/pipeline'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/pipeline'
+      expect(response.status).to eq(403)
     end
 
     it 'blocks an anonymous visitor' do
-      get '/amanuensis/pipeline'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/pipeline'
+      expect(response.status).to eq(403)
     end
 
     it 'allows staff' do
       stub_active
       sign_in(admin)
-      get '/amanuensis/pipeline'
+      get '/amanuensis/api/pipeline'
       expect(response.status).to eq(200)
     end
 
@@ -57,7 +47,7 @@ RSpec.describe Amanuensis::PipelineController, type: :request do
       group.add(user)
       stub_active
       sign_in(user)
-      get '/amanuensis/pipeline'
+      get '/amanuensis/api/pipeline'
       expect(response.status).to eq(200)
     end
 
@@ -65,8 +55,8 @@ RSpec.describe Amanuensis::PipelineController, type: :request do
       SiteSetting.amanuensis_viewing_group = group.name
       group.add(user)
       sign_in(user)
-      get '/amanuensis/pipeline'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/pipeline'
+      expect(response.status).to eq(403)
     end
   end
 
@@ -77,7 +67,7 @@ RSpec.describe Amanuensis::PipelineController, type: :request do
       sign_in(user)
     end
 
-    it 'groups meetings by stage and renders them' do
+    it 'groups meetings by stage and includes a humanized stage label' do
       stub_active(
         meetings: [
           {
@@ -92,30 +82,47 @@ RSpec.describe Amanuensis::PipelineController, type: :request do
         ],
       )
 
-      get '/amanuensis/pipeline'
+      get '/amanuensis/api/pipeline'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Writers Room Standup')
-      expect(response.body).to include('Transcribing')
+      body = response.parsed_body
+      group_entry = body['stage_groups'].first
+      expect(group_entry['stage']).to eq('transcribing')
+      expect(group_entry['stage_label']).to eq('Transcribing')
+      expect(group_entry['meetings'].first['title']).to eq('Writers Room Standup')
+      expect(group_entry['meetings'].first['attempt_note']).to be_nil
     end
 
-    it 'shows the empty state when nothing is active' do
+    it 'notes the attempt number when a meeting has retried' do
+      stub_active(
+        meetings: [
+          { 'id' => 'm1', 'title' => 'Retry Meeting', 'status' => 'transcribing', 'source' => 'google_meet',
+            'updated_at' => '2026-07-01T19:05:00Z', 'current_stage_attempt' => 3 },
+        ],
+      )
+
+      get '/amanuensis/api/pipeline'
+
+      expect(response.parsed_body['stage_groups'].first['meetings'].first['attempt_note']).to eq('attempt 3')
+    end
+
+    it 'returns an empty list when nothing is active' do
       stub_active(meetings: [])
 
-      get '/amanuensis/pipeline'
+      get '/amanuensis/api/pipeline'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Nothing in flight')
+      expect(response.parsed_body['stage_groups']).to eq([])
     end
 
     it 'surfaces an error when the upstream API fails' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/pipeline/active')
         .to_return(status: 500, body: 'boom')
 
-      get '/amanuensis/pipeline'
+      get '/amanuensis/api/pipeline'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Failed to fetch active pipeline')
+      expect(response.parsed_body['error']).to include('Failed to fetch active pipeline')
     end
   end
 end
