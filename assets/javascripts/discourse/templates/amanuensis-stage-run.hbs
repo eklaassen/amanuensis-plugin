@@ -1,0 +1,64 @@
+{{page-title (concat this.model.stage_label " Run")}}
+
+<div class="amanuensis-container">
+  <LinkTo @route="amanuensis-stage-runs" @model={{this.model.stage}} class="amanuensis-back-link">&larr; Back to {{this.model.stage_label}} runs</LinkTo>
+
+  {{#if this.model.error}}
+    <AmanuensisError @message={{this.model.error}} />
+  {{else if this.model.run}}
+    <header class="amanuensis-header">
+      <h1>{{this.model.run.meeting_title}}</h1>
+      <div class="amanuensis-header-badges">
+        <AmanuensisBadge @label={{this.model.run.stage_label}} @variant="source" />
+        <AmanuensisBadge @label={{this.model.run.outcome}} @variant={{this.model.run.outcome}} />
+        {{#if this.model.run.inferred}}
+          <span class="amanuensis-inferred-tag">reconstructed</span>
+        {{/if}}
+      </div>
+    </header>
+
+    <section class="amanuensis-section amanuensis-metadata">
+      <div class="amanuensis-metadata-grid">
+        <AmanuensisMetadataItem @label="Stage" @value={{this.model.run.stage_label}} />
+        <AmanuensisMetadataItem @label="Outcome" @value={{this.model.run.outcome}} />
+        <AmanuensisMetadataItem @label="Attempt" @value={{this.model.run.attempt}} />
+        <AmanuensisMetadataItem @label="Started" @value={{this.model.run.started_at}} />
+        {{#if this.model.run.finished_at}}
+          <AmanuensisMetadataItem @label="Finished" @value={{this.model.run.finished_at}} />
+        {{/if}}
+        {{#if this.model.run.duration}}
+          <AmanuensisMetadataItem @label="Duration" @value={{this.model.run.duration}} />
+        {{/if}}
+        {{#if this.model.run.job_id}}
+          <AmanuensisMetadataItem @label="Job ID" @value={{this.model.run.job_id}} />
+        {{/if}}
+        {{#if this.model.run.rewind_to}}
+          <AmanuensisMetadataItem @label="Rewound to" @value={{this.model.run.rewind_to_label}} />
+        {{/if}}
+      </div>
+    </section>
+
+    {{#if this.model.run.failure_reason}}
+      <section class="amanuensis-section">
+        <h2>Error</h2>
+        <AmanuensisError @message="{{this.model.run.error_code}}: {{this.model.run.failure_reason}}" />
+      </section>
+    {{/if}}
+
+    {{#if this.model.run.meeting_id}}
+      <section class="amanuensis-section">
+        <h2>Meeting</h2>
+        {{! Meetings isn't an Ember route yet -- plain href, not LinkTo.
+            Upgrade this once it is. }}
+        <a href="/amanuensis/meetings/{{this.model.run.meeting_id}}" class="amanuensis-pagination-link">View meeting &rarr;</a>
+      </section>
+    {{/if}}
+
+    {{#if this.model.other_runs.length}}
+      <section class="amanuensis-section">
+        <h2>Pipeline Timeline</h2>
+        <AmanuensisStageTimeline @runs={{this.model.other_runs}} />
+      </section>
+    {{/if}}
+  {{/if}}
+</div>

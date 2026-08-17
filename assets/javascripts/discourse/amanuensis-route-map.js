@@ -7,5 +7,7 @@
 // as core pages like /badges.
 export default function () {
   this.route("amanuensis-pipeline", { path: "/amanuensis/pipeline" });
+  this.route("amanuensis-stage-runs", { path: "/amanuensis/stages/:stage" });
+  this.route("amanuensis-stage-run", { path: "/amanuensis/stages/:stage/runs/:run_id" });
   this.route("amanuensis-outcomes", { path: "/amanuensis/outcomes" });
 }

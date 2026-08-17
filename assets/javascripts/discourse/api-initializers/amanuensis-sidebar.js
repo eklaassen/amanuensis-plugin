@@ -40,11 +40,13 @@ export default apiInitializer("1.8.0", (api) => {
   // resolve it client-side first and lands on Ember's own not-found page
   // instead of ever requesting the page from the server.
   //
-  // EMBER_ROUTES lists the pages that have since been converted to real
-  // Ember routes (see amanuensis-route-map.js) -- those should keep their
-  // client-side transition rather than being forced through a full reload.
-  // Append to this list as more pages get converted.
-  const EMBER_ROUTES = ["/amanuensis/pipeline", "/amanuensis/outcomes"];
+  // EMBER_ROUTE_PREFIXES lists the pages that have since been converted to
+  // real Ember routes (see amanuensis-route-map.js) -- those should keep
+  // their client-side transition rather than being forced through a full
+  // reload. A prefix, not an exact path, because some of these routes have
+  // dynamic segments (/amanuensis/stages/:stage/runs/:run_id). Append to
+  // this list as more pages get converted.
+  const EMBER_ROUTE_PREFIXES = ["/amanuensis/pipeline", "/amanuensis/stages", "/amanuensis/outcomes"];
 
   api.registerValueTransformer(
     "full-page-refresh-on-navigation",
@@ -53,7 +55,8 @@ export default apiInitializer("1.8.0", (api) => {
       if (!url?.startsWith("/amanuensis")) {
         return value;
       }
-      if (EMBER_ROUTES.includes(url.split("?")[0])) {
+      const path = url.split("?")[0];
+      if (EMBER_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
         return value;
       }
       return true;

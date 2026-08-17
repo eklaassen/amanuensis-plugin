@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Amanuensis::StagesController, type: :request do
+RSpec.describe Amanuensis::StagesApiController, type: :request do
   fab!(:user)
   fab!(:admin)
   fab!(:group)
@@ -42,31 +42,31 @@ RSpec.describe Amanuensis::StagesController, type: :request do
     }
   end
 
-  def stub_meeting_detail(id)
+  def stub_meeting_detail(id, stage_runs: [])
     stub_request(:get, "https://amanuensis.example.com/v1/plugin/meetings/#{id}")
       .to_return(
         status: 200,
         headers: { 'Content-Type' => 'application/json' },
-        body: { meeting: { 'id' => id }, proposal: nil, history: [], stage_runs: [] }.to_json
+        body: { meeting: { 'id' => id }, proposal: nil, history: [], stage_runs: stage_runs }.to_json
       )
   end
 
   describe 'access control on #show' do
     it 'blocks a regular signed-in user with no writing group configured' do
       sign_in(user)
-      get '/amanuensis/stages/transcribing'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/stages/transcribing/runs'
+      expect(response.status).to eq(403)
     end
 
     it 'blocks an anonymous visitor' do
-      get '/amanuensis/stages/transcribing'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/stages/transcribing/runs'
+      expect(response.status).to eq(403)
     end
 
     it 'allows staff' do
       stub_runs('transcribing')
       sign_in(admin)
-      get '/amanuensis/stages/transcribing'
+      get '/amanuensis/api/stages/transcribing/runs'
       expect(response.status).to eq(200)
     end
   end
@@ -79,44 +79,49 @@ RSpec.describe Amanuensis::StagesController, type: :request do
     end
 
     it '404s for an invalid stage' do
-      get '/amanuensis/stages/not-a-real-stage'
+      get '/amanuensis/api/stages/not-a-real-stage/runs'
       expect(response.status).to eq(404)
     end
 
-    it 'renders runs for a valid observable stage' do
+    it 'returns runs for a valid observable stage, plus the stage switcher list' do
       stub_runs('transcribing', runs: [run_body])
 
-      get '/amanuensis/stages/transcribing'
+      get '/amanuensis/api/stages/transcribing/runs'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Writers Room Standup')
+      body = response.parsed_body
+      expect(body['stage_label']).to eq('Transcribing')
+      expect(body['runs'].first['meeting_title']).to eq('Writers Room Standup')
+      expect(body['observable_stages']).to eq(
+        Amanuensis::PipelineStages::OBSERVABLE.map { |s| { 'value' => s, 'label' => s.humanize } }
+      )
     end
 
     it 'accepts a stage outside the observable set (the escape hatch)' do
       stub_runs('downloading', runs: [])
 
-      get '/amanuensis/stages/downloading'
+      get '/amanuensis/api/stages/downloading/runs'
 
       expect(response.status).to eq(200)
     end
 
-    it 'shows the empty state when there are no runs' do
+    it 'returns an empty list when there are no runs' do
       stub_runs('transcribing', runs: [])
 
-      get '/amanuensis/stages/transcribing'
+      get '/amanuensis/api/stages/transcribing/runs'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('No runs recorded')
+      expect(response.parsed_body['runs']).to eq([])
     end
 
     it 'surfaces an error when the upstream API fails' do
       stub_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/stages/transcribing/runs(\?.*)?\z})
         .to_return(status: 500, body: 'boom')
 
-      get '/amanuensis/stages/transcribing'
+      get '/amanuensis/api/stages/transcribing/runs'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Failed to fetch stage runs')
+      expect(response.parsed_body['error']).to include('Failed to fetch stage runs')
     end
   end
 
@@ -128,39 +133,42 @@ RSpec.describe Amanuensis::StagesController, type: :request do
     end
 
     it '404s for an invalid stage' do
-      get '/amanuensis/stages/not-a-real-stage/runs/sr1'
+      get '/amanuensis/api/stages/not-a-real-stage/runs/sr1'
       expect(response.status).to eq(404)
     end
 
-    it 'renders the run and fetches the meeting for the timeline' do
+    it 'returns the run and the meeting timeline for "other runs"' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/stages/transcribing/runs/sr1')
         .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: run_body.to_json)
-      stub_meeting_detail('m1')
+      stub_meeting_detail('m1', stage_runs: [run_body])
 
-      get '/amanuensis/stages/transcribing/runs/sr1'
+      get '/amanuensis/api/stages/transcribing/runs/sr1'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Writers Room Standup')
+      body = response.parsed_body
+      expect(body['run']['meeting_title']).to eq('Writers Room Standup')
+      expect(body['other_runs'].first['stage_label']).to eq('Transcribing')
     end
 
     it '404s when the run belongs to a different stage than the URL segment' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/stages/summarizing/runs/sr1')
         .to_return(status: 404, body: 'not found')
 
-      get '/amanuensis/stages/summarizing/runs/sr1'
+      get '/amanuensis/api/stages/summarizing/runs/sr1'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Stage run not found')
+      expect(response.parsed_body['error']).to include('Stage run not found')
+      expect(response.parsed_body['stage']).to eq('summarizing')
     end
 
     it 'surfaces an error when the run is not found upstream' do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/stages/transcribing/runs/missing')
         .to_return(status: 404, body: 'not found')
 
-      get '/amanuensis/stages/transcribing/runs/missing'
+      get '/amanuensis/api/stages/transcribing/runs/missing'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Stage run not found')
+      expect(response.parsed_body['error']).to include('Stage run not found')
     end
 
     it 'degrades gracefully instead of crashing when the upstream run is missing meeting_id' do
@@ -168,11 +176,13 @@ RSpec.describe Amanuensis::StagesController, type: :request do
       stub_request(:get, 'https://amanuensis.example.com/v1/plugin/stages/transcribing/runs/sr1')
         .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: malformed.to_json)
 
-      get '/amanuensis/stages/transcribing/runs/sr1'
+      get '/amanuensis/api/stages/transcribing/runs/sr1'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Writers Room Standup')
-      expect(response.body).not_to include('View meeting')
+      body = response.parsed_body
+      expect(body['run']['meeting_title']).to eq('Writers Room Standup')
+      expect(body['run']['meeting_id']).to be_nil
+      expect(body['other_runs']).to eq([])
     end
   end
 end
