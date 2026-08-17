@@ -17,6 +17,9 @@ RSpec.describe Amanuensis::EmberBootstrapController, type: :request do
   #
   # Grows as more pages convert to Ember routes.
   EMBER_PATHS = %w[
+    /amanuensis
+    /amanuensis/meetings
+    /amanuensis/meetings/some-id
     /amanuensis/pipeline
     /amanuensis/stages/transcribing
     /amanuensis/stages/transcribing/runs/some-run-id

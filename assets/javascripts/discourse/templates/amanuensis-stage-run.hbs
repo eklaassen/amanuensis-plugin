@@ -48,9 +48,7 @@
     {{#if this.model.run.meeting_id}}
       <section class="amanuensis-section">
         <h2>Meeting</h2>
-        {{! Meetings isn't an Ember route yet -- plain href, not LinkTo.
-            Upgrade this once it is. }}
-        <a href="/amanuensis/meetings/{{this.model.run.meeting_id}}" class="amanuensis-pagination-link">View meeting &rarr;</a>
+        <LinkTo @route="amanuensis-meeting" @model={{this.model.run.meeting_id}} class="amanuensis-pagination-link">View meeting &rarr;</LinkTo>
       </section>
     {{/if}}
 

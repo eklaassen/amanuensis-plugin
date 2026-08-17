@@ -16,9 +16,7 @@
         </h2>
         <div class="amanuensis-meetings-list">
           {{#each group.meetings as |meeting|}}
-            {{! Meetings isn't an Ember route yet -- plain href, not LinkTo.
-                Upgrade this once it is. }}
-            <a href="/amanuensis/meetings/{{meeting.id}}" class="amanuensis-meeting-card">
+            <LinkTo @route="amanuensis-meeting" @model={{meeting.id}} class="amanuensis-meeting-card">
               <div class="amanuensis-card-header">
                 <h3 class="amanuensis-meeting-title">{{meeting.title}}</h3>
                 <AmanuensisBadge @label={{meeting.source_label}} @variant="source" />
@@ -32,7 +30,7 @@
                   <span class="amanuensis-meta-item">{{meeting.attempt_note}}</span>
                 {{/if}}
               </div>
-            </a>
+            </LinkTo>
           {{/each}}
         </div>
       </section>

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Amanuensis
-  # Base class for future JSON endpoints (Phase 2+: agenda candidates,
-  # agendas, uploads). Not yet routed to anything.
+  # Base class for every JSON endpoint (MeetingsApiController,
+  # PipelineApiController, StagesApiController, OutcomesApiController,
+  # UploadsApiController) -- each backs an Ember route the same way.
   #
   # Unlike ApplicationController, this does not skip check_xhr -- JSON
   # requests from Ember's ajax() are XHR by definition. It also does not
@@ -24,14 +25,19 @@ module Amanuensis
 
     private
 
-    # JSON callers get 403 where the HTML pages 404. Hiding a page's existence
-    # from someone who shouldn't know about it is worth a 404; for an XHR the
-    # caller already knows the endpoint exists, and a 404 there just makes a
+    # JSON callers get 403 where a hard page load gets 404 (see
+    # EmberBootstrapController). Hiding a page's existence from someone who
+    # shouldn't know about it is worth a 404 for that first HTML request;
+    # for an XHR made by code that already rendered the page, the caller
+    # already knows the endpoint exists, and a 404 there just makes a
     # permissions problem look like a routing bug.
     #
     # These override AccessControl's versions -- a method on the class wins
-    # over one from an included module -- so the HTML controllers that share
-    # the concern keep their 404 behaviour, which their specs assert.
+    # over one from an included module.
+    def ensure_viewer
+      raise Discourse::InvalidAccess unless Amanuensis::Permissions.viewer?(current_user)
+    end
+
     def ensure_writer
       raise Discourse::InvalidAccess unless Amanuensis::Permissions.writer?(current_user)
     end

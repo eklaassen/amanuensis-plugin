@@ -46,7 +46,12 @@ export default apiInitializer("1.8.0", (api) => {
   // reload. A prefix, not an exact path, because some of these routes have
   // dynamic segments (/amanuensis/stages/:stage/runs/:run_id). Append to
   // this list as more pages get converted.
-  const EMBER_ROUTE_PREFIXES = ["/amanuensis/pipeline", "/amanuensis/stages", "/amanuensis/outcomes"];
+  const EMBER_ROUTE_PREFIXES = [
+    "/amanuensis/meetings",
+    "/amanuensis/pipeline",
+    "/amanuensis/stages",
+    "/amanuensis/outcomes",
+  ];
 
   api.registerValueTransformer(
     "full-page-refresh-on-navigation",
