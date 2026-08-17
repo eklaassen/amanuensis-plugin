@@ -16,9 +16,9 @@ Amanuensis::Engine.routes.draw do
   # to boot the Discourse app shell before Ember's own router can take over
   # -- there's nothing after this engine's mount for the request to fall
   # through to (Discourse core's only catch-all is permalink-constrained,
-  # not a generic SPA fallback). See OutcomesController for how that boot
-  # happens.
-  get '/outcomes' => 'outcomes#index'
+  # not a generic SPA fallback). See EmberBootstrapController for how that
+  # boot happens.
+  get '/outcomes' => 'ember_bootstrap#show'
 
   scope '/api', defaults: { format: :json } do
     get '/outcomes' => 'outcomes_api#index'
