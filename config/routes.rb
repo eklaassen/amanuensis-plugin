@@ -11,10 +11,15 @@ Amanuensis::Engine.routes.draw do
 
   get '/uploads/new' => 'uploads#new'
 
-  # Outcomes is Ember-rendered (assets/javascripts/discourse/routes/amanuensis-outcomes.js)
-  # so it doesn't need an engine route for HTML -- Discourse's normal SPA
-  # fallback serves the Ember shell for /amanuensis/outcomes, same as any
-  # other core client-side route. Only the JSON endpoint it calls lives here.
+  # Outcomes is Ember-rendered (assets/javascripts/discourse/routes/amanuensis-outcomes.js),
+  # but a fresh browser load/refresh/new-tab still needs a real Rails route
+  # to boot the Discourse app shell before Ember's own router can take over
+  # -- there's nothing after this engine's mount for the request to fall
+  # through to (Discourse core's only catch-all is permalink-constrained,
+  # not a generic SPA fallback). See OutcomesController for how that boot
+  # happens.
+  get '/outcomes' => 'outcomes#index'
+
   scope '/api', defaults: { format: :json } do
     get '/outcomes' => 'outcomes_api#index'
     post '/uploads' => 'uploads_api#create'
