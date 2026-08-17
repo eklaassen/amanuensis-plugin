@@ -24,6 +24,29 @@ module Amanuensis
     # that moves or bypasses it would silently make traversal reachable.
     UPLOAD_ID_FORMAT = /\A[\w-]+\z/
 
+    # The Ember upload form (assets/javascripts/discourse/routes/
+    # amanuensis-upload-new.js) needs these before it can render the form at
+    # all -- max size for client-side validation, allowed extensions for the
+    # file input's `accept` attribute and the hint text. Reading them from
+    # UploadPolicy here rather than duplicating the numbers in JS is what
+    # keeps this from drifting the same way PipelineStages::ORDER's own
+    # comment warns against for a cross-repo duplicate.
+    #
+    # Named upload_config, not config: ActionController::Base already has an
+    # instance method called `config` (an ActiveSupport::InheritableOptions
+    # holding, among other things, the CSRF/forgery-protection settings
+    # protect_from_forgery itself reads on every request). Defining `def
+    # config` here silently shadowed it -- every action on this controller,
+    # not just this one, started 500ing, because Rails' own request cycle
+    # calls `self.config` internally and got a rendered JSON response
+    # instead of the options object it expected.
+    def upload_config
+      render json: {
+        max_bytes: UploadPolicy::MAX_BYTES,
+        allowed_extensions: UploadPolicy::ALLOWED_EXTENSIONS
+      }
+    end
+
     def create
       RateLimiter.new(current_user, 'amanuensis-upload-presign', PRESIGN_LIMIT_PER_HOUR, 1.hour).performed!
 

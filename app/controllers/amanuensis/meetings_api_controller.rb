@@ -1,0 +1,182 @@
+# frozen_string_literal: true
+
+module Amanuensis
+  # JSON replacement for the old server-rendered MeetingsController --
+  # backs the Ember routes at /amanuensis/meetings and
+  # /amanuensis/meetings/:id (assets/javascripts/discourse/routes/
+  # amanuensis-meetings.js and amanuensis-meeting.js).
+  class MeetingsApiController < Amanuensis::ApiController
+    before_action :ensure_viewer
+
+    include Amanuensis::Formatting
+
+    PAGE_SIZE = 25
+
+    def index
+      params_hash = { limit: PAGE_SIZE }
+      params_hash[:before] = params[:before] if params[:before].present?
+      params_hash[:status] = params[:status] if params[:status].present?
+
+      result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
+
+      if result.ok?
+        render json: {
+          meetings: result.body['meetings'].map { |m| serialize_meeting_summary(m) },
+          pagination: result.body['pagination']
+        }
+      else
+        render json: {
+          meetings: [],
+          pagination: { 'has_more' => false },
+          error: result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
+        }
+      end
+    end
+
+    MEETING_ID_FORMAT = /\A[\w-]+\z/
+
+    def show
+      raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
+
+      result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings/#{params[:id]}")
+
+      if result.ok?
+        render json: serialize_meeting_detail(result.body)
+      else
+        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" }
+      end
+    end
+
+    private
+
+    def serialize_meeting_summary(meeting)
+      {
+        id: meeting['id'],
+        title: meeting['title'],
+        status: meeting['status'],
+        source: meeting['source'],
+        source_label: meeting['source'].to_s.humanize,
+        recorded_at: formatted_date(meeting['recorded_at']),
+        duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
+        has_notesbot_transcript: meeting['has_notesbot_transcript'],
+        has_summary: meeting['has_summary']
+      }
+    end
+
+    def serialize_meeting_detail(data)
+      meeting = data['meeting']
+
+      {
+        meeting: serialize_meeting_full(meeting),
+        notesbot_groups: notesbot_groups_for(meeting),
+        notesbot_turn_count: meeting['notesbot_turns']&.length || 0,
+        proposal: data['proposal'] && data['proposal']['items'].present? ? serialize_proposal(data['proposal']) : nil,
+        history: (data['history'] || []).map { |h| serialize_history_entry(h) },
+        stage_runs: (data['stage_runs'] || []).map { |r| timeline_run(r) }
+      }
+    end
+
+    def serialize_meeting_full(meeting)
+      {
+        id: meeting['id'],
+        title: meeting['title'],
+        status: meeting['status'],
+        source: meeting['source'],
+        source_label: meeting['source'].to_s.humanize,
+        recorded_at: formatted_date(meeting['recorded_at']),
+        duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
+        discourse_topic_id: meeting['discourse_topic_id'],
+        summary_html: meeting['summary'].present? ? sanitized_summary(meeting['summary']) : nil
+      }
+    end
+
+    # Grouped by speaker, always -- the old ERB view had a fallback path for
+    # an ungrouped flat list, but the controller only ever set @grouped_turns
+    # (never left it nil) whenever this section rendered at all, so that
+    # fallback was dead code. Not reproduced here.
+    def notesbot_groups_for(meeting)
+      turns = meeting['notesbot_turns']
+      return nil unless meeting['source'] == 'notesbot' && turns.present?
+
+      turns.group_by { |t| t['speaker'] }.map do |speaker, speaker_turns|
+        {
+          speaker: speaker,
+          # A bare hex color, not a CSS declaration string -- the template
+          # sets it as a plain --amanuensis-speaker-color custom property
+          # (an ordinary attribute value, not raw HTML), so no html-safe/
+          # trustHTML ceremony is needed to bind it.
+          speaker_color: speaker_color(speaker),
+          turn_count: speaker_turns.length,
+          turns: speaker_turns.map { |t| { timestamp: t['timestamp'], text: t['text'] } }
+        }
+      end
+    end
+
+    PROPOSAL_DECISIONS = %w[pending approved rejected edited].freeze
+
+    def serialize_proposal(proposal)
+      items = proposal['items'] || []
+
+      groups = PROPOSAL_DECISIONS.filter_map do |decision|
+        decision_items = items.select { |i| i['decision'] == decision }
+        next if decision_items.empty?
+
+        {
+          decision: decision,
+          decision_label: decision.capitalize,
+          count: decision_items.length,
+          items: decision_items.map { |i| serialize_proposal_item(i, show_edited: decision == 'edited') }
+        }
+      end
+
+      { state: proposal['state'], groups: groups }
+    end
+
+    def serialize_proposal_item(item, show_edited:)
+      {
+        operation: item['operation'],
+        target_type: item['target_type'],
+        target_field: item['target_field'],
+        proposed_value: item['proposed_value'] ? format_value(item['proposed_value']) : nil,
+        edited_value: show_edited && item['edited_value'] ? format_value(item['edited_value']) : nil,
+        show_edited: show_edited
+      }
+    end
+
+    def serialize_history_entry(entry)
+      {
+        created_at: formatted_date(entry['created_at']),
+        source: entry['source'],
+        actor: entry['actor'],
+        summary: entry['summary']
+      }
+    end
+
+    SPEAKER_COLORS = %w[
+      #4A90D9 #E8734A #50B86C #D94A8E #B86CE8
+      #4AD9C8 #E8B04A #6CB850 #D94A4A #4A6CD9
+    ].freeze
+
+    def speaker_color(speaker)
+      return '' if speaker.blank?
+
+      hash = speaker.each_char.map(&:ord).sum
+      SPEAKER_COLORS[hash % SPEAKER_COLORS.length]
+    end
+
+    def format_value(value)
+      case value
+      when Hash, Array
+        value.to_json
+      when nil
+        '—'
+      else
+        value.to_s
+      end
+    end
+
+    def sanitized_summary(summary)
+      Amanuensis::Sanitizer.sanitize_summary(summary)
+    end
+  end
+end

@@ -73,6 +73,25 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
     end
   end
 
+  describe '#upload_config' do
+    it 'blocks a signed-in non-writer' do
+      sign_in(user)
+      get '/amanuensis/api/uploads/config'
+      expect(response.status).to eq(403)
+    end
+
+    it 'returns the size cap and allowed extensions for a writer' do
+      group.add(user)
+      sign_in(user)
+
+      get '/amanuensis/api/uploads/config'
+
+      expect(response.status).to eq(200)
+      expect(response.parsed_body['max_bytes']).to eq(Amanuensis::UploadPolicy::MAX_BYTES)
+      expect(response.parsed_body['allowed_extensions']).to eq(Amanuensis::UploadPolicy::ALLOWED_EXTENSIONS)
+    end
+  end
+
   describe '#create' do
     before do
       group.add(user)

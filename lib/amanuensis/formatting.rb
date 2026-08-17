@@ -75,5 +75,23 @@ module Amanuensis
     rescue ArgumentError
       ''
     end
+
+    # Shared shape for a stage_runs entry as consumed by the
+    # <AmanuensisStageTimeline> Ember component -- used by both
+    # StagesApiController (a stage run's "other runs" for the same meeting)
+    # and MeetingsApiController (a meeting's full pipeline timeline). Same
+    # upstream record shape in both places, so one serializer.
+    def timeline_run(run)
+      attempt = run['attempt'].to_i
+      {
+        stage_label: humanize_stage(run['stage']),
+        outcome: run['outcome'],
+        started_at: formatted_date(run['started_at']),
+        duration: run['duration_ms'] ? format_duration_ms(run['duration_ms']) : nil,
+        attempt_note: attempt > 1 ? "attempt #{attempt}" : nil,
+        failure_reason: run['failure_reason'],
+        inferred: run['inferred']
+      }
+    end
   end
 end

@@ -1,27 +1,31 @@
 # frozen_string_literal: true
 
 Amanuensis::Engine.routes.draw do
-  get '/' => 'meetings#index'
-  get '/meetings' => 'meetings#index'
-  get '/meetings/:id' => 'meetings#show'
-
-  get '/pipeline' => 'pipeline#active'
-  get '/stages/:stage' => 'stages#show'
-  get '/stages/:stage/runs/:run_id' => 'stages#run'
-
-  get '/uploads/new' => 'uploads#new'
-
-  # Outcomes is Ember-rendered (assets/javascripts/discourse/routes/amanuensis-outcomes.js),
-  # but a fresh browser load/refresh/new-tab still needs a real Rails route
-  # to boot the Discourse app shell before Ember's own router can take over
-  # -- there's nothing after this engine's mount for the request to fall
-  # through to (Discourse core's only catch-all is permalink-constrained,
-  # not a generic SPA fallback). See OutcomesController for how that boot
+  # Every /amanuensis/* page is Ember-rendered now (see
+  # assets/javascripts/discourse/amanuensis-route-map.js), but a fresh
+  # browser load/refresh/new-tab still needs a real Rails route to boot the
+  # Discourse app shell before Ember's own router can take over -- there's
+  # nothing after this engine's mount for the request to fall through to
+  # (Discourse core's only catch-all is permalink-constrained, not a
+  # generic SPA fallback). See EmberBootstrapController for how that boot
   # happens.
-  get '/outcomes' => 'outcomes#index'
+  get '/' => 'ember_bootstrap#show'
+  get '/meetings' => 'ember_bootstrap#show'
+  get '/meetings/:id' => 'ember_bootstrap#show'
+  get '/pipeline' => 'ember_bootstrap#show'
+  get '/stages/:stage' => 'ember_bootstrap#show'
+  get '/stages/:stage/runs/:run_id' => 'ember_bootstrap#show'
+  get '/outcomes' => 'ember_bootstrap#show'
+  get '/uploads/new' => 'ember_bootstrap#show'
 
   scope '/api', defaults: { format: :json } do
+    get '/meetings' => 'meetings_api#index'
+    get '/meetings/:id' => 'meetings_api#show'
+    get '/pipeline' => 'pipeline_api#active'
+    get '/stages/:stage/runs' => 'stages_api#show'
+    get '/stages/:stage/runs/:run_id' => 'stages_api#run'
     get '/outcomes' => 'outcomes_api#index'
+    get '/uploads/config' => 'uploads_api#upload_config'
     post '/uploads' => 'uploads_api#create'
     post '/uploads/:upload_id/complete' => 'uploads_api#complete'
   end
