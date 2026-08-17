@@ -24,6 +24,20 @@ module Amanuensis
     # that moves or bypasses it would silently make traversal reachable.
     UPLOAD_ID_FORMAT = /\A[\w-]+\z/
 
+    # The Ember upload form (assets/javascripts/discourse/routes/
+    # amanuensis-upload-new.js) needs these before it can render the form at
+    # all -- max size for client-side validation, allowed extensions for the
+    # file input's `accept` attribute and the hint text. Reading them from
+    # UploadPolicy here rather than duplicating the numbers in JS is what
+    # keeps this from drifting the same way PipelineStages::ORDER's own
+    # comment warns against for a cross-repo duplicate.
+    def config
+      render json: {
+        max_bytes: UploadPolicy::MAX_BYTES,
+        allowed_extensions: UploadPolicy::ALLOWED_EXTENSIONS
+      }
+    end
+
     def create
       RateLimiter.new(current_user, 'amanuensis-upload-presign', PRESIGN_LIMIT_PER_HOUR, 1.hour).performed!
 

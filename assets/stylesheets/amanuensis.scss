@@ -361,6 +361,12 @@ details:not([open]) .amanuensis-foldable-toggle {
   border-left: 3px solid;
   padding-left: 10px;
   margin-bottom: 4px;
+  // Set inline per element as --amanuensis-speaker-color (a plain CSS custom
+  // property, not raw HTML) -- a deterministic-per-speaker color from
+  // MeetingsApiController#speaker_color_style. currentColor is the same
+  // fallback the old bare `border-left: 3px solid` (no color) relied on.
+  border-left-color: var(--amanuensis-speaker-color, currentColor);
+  color: var(--amanuensis-speaker-color, inherit);
 }
 
 .amanuensis-speaker-count {
@@ -393,6 +399,9 @@ details:not([open]) .amanuensis-foldable-toggle {
   flex-shrink: 0;
   border-left: 2px solid transparent;
   padding-left: 6px;
+  // Same --amanuensis-speaker-color custom property as .amanuensis-speaker-header.
+  border-left-color: var(--amanuensis-speaker-color, transparent);
+  color: var(--amanuensis-speaker-color, inherit);
 }
 
 .amanuensis-turn-text {
