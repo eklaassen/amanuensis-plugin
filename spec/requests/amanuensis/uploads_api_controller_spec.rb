@@ -29,7 +29,9 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
   after { RateLimiter.disable }
 
-  def stub_presign(status: 201, body: { upload_id: 'upl_1', upload_url: 'https://s3.example.com/signed' })
+  def stub_presign(status: 201,
+                   body: { upload_id: 'upl_1', upload_url: 'https://s3.example.com/signed',
+                           content_type: 'audio/mp4' })
     stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads')
       .to_return(status: status, headers: { 'Content-Type' => 'application/json' }, body: body.to_json)
   end
@@ -83,6 +85,15 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
       expect(response.parsed_body['upload_id']).to eq('upl_1')
       expect(response.parsed_body['upload_url']).to eq('https://s3.example.com/signed')
+    end
+
+    it 'passes the signed content type through for the browser to echo' do
+      # Content-Type is a signed header on the presigned PUT. Without this the
+      # browser sends whatever it infers from the file and S3 rejects it.
+      stub_presign
+      post '/amanuensis/api/uploads', params: valid_payload
+
+      expect(response.parsed_body['content_type']).to eq('audio/mp4')
     end
 
     it 'authenticates upstream with the admin key, not the read secret' do

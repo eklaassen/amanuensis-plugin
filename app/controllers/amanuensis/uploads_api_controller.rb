@@ -48,9 +48,17 @@ module Amanuensis
       upload_id = result.body['upload_id']
       claim_ownership(upload_id)
 
+      # content_type is passed through because the browser has to echo it as
+      # the PUT's Content-Type: it is a signed header, so anything else
+      # (audio/x-m4a rather than audio/mp4, or nothing) fails the signature.
+      #
       # upload_url is a bearer credential -- it goes back in the XHR body and
       # nowhere else (no href, no attribute, nothing that leaks via Referer).
-      render json: { upload_id: upload_id, upload_url: result.body['upload_url'] }
+      render json: {
+        upload_id: upload_id,
+        upload_url: result.body['upload_url'],
+        content_type: result.body['content_type']
+      }
     rescue UploadPolicy::Rejected => e
       render json: { errors: [e.message] }, status: 422
     end
