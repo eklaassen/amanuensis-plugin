@@ -35,17 +35,28 @@ export default apiInitializer("1.8.0", (api) => {
     return;
   }
 
-  // /amanuensis/* is a plain server-rendered Rails engine, not an Ember
-  // route. Without this, Discourse's global click handler tries to resolve
-  // it client-side first and lands on Ember's own not-found page instead of
-  // ever requesting the page from the server.
+  // /amanuensis/* is mostly still a plain server-rendered Rails engine, not
+  // an Ember route. Without this, Discourse's global click handler tries to
+  // resolve it client-side first and lands on Ember's own not-found page
+  // instead of ever requesting the page from the server.
+  //
+  // EMBER_ROUTES lists the pages that have since been converted to real
+  // Ember routes (see amanuensis-route-map.js) -- those should keep their
+  // client-side transition rather than being forced through a full reload.
+  // Append to this list as more pages get converted.
+  const EMBER_ROUTES = ["/amanuensis/outcomes"];
+
   api.registerValueTransformer(
     "full-page-refresh-on-navigation",
     ({ value, context }) => {
-      if (context?.url?.startsWith("/amanuensis")) {
-        return true;
+      const url = context?.url;
+      if (!url?.startsWith("/amanuensis")) {
+        return value;
       }
-      return value;
+      if (EMBER_ROUTES.includes(url.split("?")[0])) {
+        return value;
+      }
+      return true;
     }
   );
 

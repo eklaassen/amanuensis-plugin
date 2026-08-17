@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Amanuensis::OutcomesController, type: :request do
+RSpec.describe Amanuensis::OutcomesApiController, type: :request do
   fab!(:user)
   fab!(:admin)
   fab!(:group)
@@ -26,19 +26,19 @@ RSpec.describe Amanuensis::OutcomesController, type: :request do
   describe 'access control' do
     it 'blocks a regular signed-in user with no writing group configured' do
       sign_in(user)
-      get '/amanuensis/outcomes'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/outcomes'
+      expect(response.status).to eq(403)
     end
 
     it 'blocks an anonymous visitor' do
-      get '/amanuensis/outcomes'
-      expect(response.status).to eq(404)
+      get '/amanuensis/api/outcomes'
+      expect(response.status).to eq(403)
     end
 
     it 'allows staff' do
       stub_outcomes(status: 'complete')
       sign_in(admin)
-      get '/amanuensis/outcomes'
+      get '/amanuensis/api/outcomes'
       expect(response.status).to eq(200)
     end
   end
@@ -59,13 +59,16 @@ RSpec.describe Amanuensis::OutcomesController, type: :request do
         ],
       )
 
-      get '/amanuensis/outcomes'
+      get '/amanuensis/api/outcomes'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Writers Room Standup')
+      body = response.parsed_body
+      expect(body['status']).to eq('complete')
+      expect(body['meetings'].first['title']).to eq('Writers Room Standup')
+      expect(body['meetings'].first['recorded_at']).to eq('July 01, 2026 at 07:00 PM')
     end
 
-    it 'filters to failed meetings and shows the failure reason' do
+    it 'filters to failed meetings and reports the failure reason' do
       stub_outcomes(
         status: 'failed',
         meetings: [
@@ -74,35 +77,36 @@ RSpec.describe Amanuensis::OutcomesController, type: :request do
         ],
       )
 
-      get '/amanuensis/outcomes', params: { status: 'failed' }
+      get '/amanuensis/api/outcomes', params: { status: 'failed' }
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Broken Session')
-      expect(response.body).to include('Upstream transcription service unavailable')
+      body = response.parsed_body
+      expect(body['meetings'].first['title']).to eq('Broken Session')
+      expect(body['meetings'].first['failure_reason']).to eq('Upstream transcription service unavailable')
     end
 
     it '404s for a status outside complete/failed' do
-      get '/amanuensis/outcomes', params: { status: 'transcribing' }
+      get '/amanuensis/api/outcomes', params: { status: 'transcribing' }
       expect(response.status).to eq(404)
     end
 
-    it 'shows the empty state when there are no meetings' do
+    it 'returns an empty list when there are no meetings' do
       stub_outcomes(status: 'complete', meetings: [])
 
-      get '/amanuensis/outcomes'
+      get '/amanuensis/api/outcomes'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('No meetings here yet')
+      expect(response.parsed_body['meetings']).to eq([])
     end
 
     it 'surfaces an error when the upstream API fails' do
       stub_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/meetings\?.*\z})
         .to_return(status: 500, body: 'boom')
 
-      get '/amanuensis/outcomes'
+      get '/amanuensis/api/outcomes'
 
       expect(response.status).to eq(200)
-      expect(response.body).to include('Failed to fetch outcomes')
+      expect(response.parsed_body['error']).to include('Failed to fetch outcomes')
     end
   end
 end
