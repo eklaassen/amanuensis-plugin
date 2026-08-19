@@ -26,4 +26,8 @@ export default class AmanuensisMeetingRoute extends DiscourseRoute {
       return data;
     });
   }
+
+  titleToken() {
+    return this.controller?.model?.meeting?.title || "Meeting";
+  }
 }

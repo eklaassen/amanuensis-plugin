@@ -28,4 +28,8 @@ export default class AmanuensisMeetingsRoute extends DiscourseRoute {
       },
     });
   }
+
+  titleToken() {
+    return "Writers' Room Meetings";
+  }
 }
