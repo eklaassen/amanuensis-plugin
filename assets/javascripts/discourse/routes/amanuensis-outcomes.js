@@ -29,6 +29,13 @@ export default class AmanuensisOutcomesRoute extends DiscourseRoute {
     });
   }
 
+  // DiscourseRoute (discourse/routes/discourse) collects this into the
+  // document title via _collectTitleTokens -- {{page-title}} isn't a real
+  // helper in this codebase, this is the actual mechanism.
+  titleToken() {
+    return "Outcomes";
+  }
+
   // Query-param changes (the status chips, "Older"/"Newest" pagination
   // links) re-run model() rather than push a new history entry on top of
   // the same page.

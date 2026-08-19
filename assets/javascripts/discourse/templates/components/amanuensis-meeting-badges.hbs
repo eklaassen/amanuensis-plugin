@@ -1,7 +1,0 @@
-{{! @meeting: needs status, source, source_label }}
-<AmanuensisBadge @label={{@meeting.status}} @variant={{@meeting.status}} />
-{{#if (eq @meeting.source "notesbot")}}
-  <AmanuensisBadge @label="NotesBot" @variant="notesbot" />
-{{else}}
-  <AmanuensisBadge @label={{@meeting.source_label}} @variant="source" />
-{{/if}}

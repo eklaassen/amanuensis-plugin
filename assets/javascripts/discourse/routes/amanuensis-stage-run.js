@@ -15,4 +15,9 @@ export default class AmanuensisStageRunRoute extends DiscourseRoute {
   model(params) {
     return ajax(`/amanuensis/api/stages/${params.stage}/runs/${params.run_id}`);
   }
+
+  titleToken() {
+    const label = this.controller?.model?.stage_label;
+    return label ? `${label} Run` : undefined;
+  }
 }

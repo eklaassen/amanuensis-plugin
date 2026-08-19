@@ -18,4 +18,8 @@ export default class AmanuensisPipelineRoute extends DiscourseRoute {
   model() {
     return ajax("/amanuensis/api/pipeline");
   }
+
+  titleToken() {
+    return "Active Pipeline";
+  }
 }
