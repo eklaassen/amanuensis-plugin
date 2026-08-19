@@ -30,4 +30,8 @@ export default class AmanuensisStageRunsRoute extends DiscourseRoute {
     super.setupController(controller, model);
     controller.set("stage", model.stage);
   }
+
+  titleToken() {
+    return this.controller?.model?.stage_label;
+  }
 }
