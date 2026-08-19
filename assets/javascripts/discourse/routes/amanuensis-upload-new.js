@@ -15,4 +15,8 @@ export default class AmanuensisUploadNewRoute extends DiscourseRoute {
   model() {
     return ajax("/amanuensis/api/uploads/config");
   }
+
+  titleToken() {
+    return "Upload a recording";
+  }
 }
