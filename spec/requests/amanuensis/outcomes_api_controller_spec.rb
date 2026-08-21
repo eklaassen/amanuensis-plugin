@@ -65,7 +65,7 @@ RSpec.describe Amanuensis::OutcomesApiController, type: :request do
       body = response.parsed_body
       expect(body['status']).to eq('complete')
       expect(body['meetings'].first['title']).to eq('Writers Room Standup')
-      expect(body['meetings'].first['recorded_at']).to eq('July 01, 2026 at 07:00 PM')
+      expect(body['meetings'].first['recorded_at']).to eq('2026-07-01T19:00:00Z')
     end
 
     it 'filters to failed meetings and reports the failure reason' do

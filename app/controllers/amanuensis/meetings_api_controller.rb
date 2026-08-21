@@ -58,7 +58,7 @@ module Amanuensis
         status: meeting['status'],
         source: meeting['source'],
         source_label: meeting['source'].to_s.humanize,
-        recorded_at: formatted_date(meeting['recorded_at']),
+        recorded_at: meeting['recorded_at'],
         duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
         has_notesbot_transcript: meeting['has_notesbot_transcript'],
         has_summary: meeting['has_summary'],
@@ -89,7 +89,7 @@ module Amanuensis
         status: meeting['status'],
         source: meeting['source'],
         source_label: meeting['source'].to_s.humanize,
-        recorded_at: formatted_date(meeting['recorded_at']),
+        recorded_at: meeting['recorded_at'],
         duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
         discourse_topic_id: meeting['discourse_topic_id'],
         summary_html: meeting['summary'].present? ? sanitized_summary(meeting['summary']) : nil
