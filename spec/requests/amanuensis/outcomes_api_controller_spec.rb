@@ -105,7 +105,7 @@ RSpec.describe Amanuensis::OutcomesApiController, type: :request do
 
       get '/amanuensis/api/outcomes'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Failed to fetch outcomes')
     end
   end

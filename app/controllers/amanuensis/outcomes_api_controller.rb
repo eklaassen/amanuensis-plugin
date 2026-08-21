@@ -33,7 +33,7 @@ module Amanuensis
           meetings: [],
           pagination: { 'has_more' => false },
           error: result.error || "Failed to fetch outcomes (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 

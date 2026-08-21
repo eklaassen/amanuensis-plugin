@@ -121,7 +121,7 @@ RSpec.describe Amanuensis::PipelineApiController, type: :request do
 
       get '/amanuensis/api/pipeline'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Failed to fetch active pipeline')
     end
   end

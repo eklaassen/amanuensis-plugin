@@ -29,7 +29,7 @@ module Amanuensis
           meetings: [],
           pagination: { 'has_more' => false },
           error: result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 
@@ -43,7 +43,8 @@ module Amanuensis
       if result.ok?
         render json: serialize_meeting_detail(result.body)
       else
-        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" }
+        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" },
+               status: 502
       end
     end
 

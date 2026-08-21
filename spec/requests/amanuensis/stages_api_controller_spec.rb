@@ -120,7 +120,7 @@ RSpec.describe Amanuensis::StagesApiController, type: :request do
 
       get '/amanuensis/api/stages/transcribing/runs'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Failed to fetch stage runs')
     end
   end
@@ -156,7 +156,7 @@ RSpec.describe Amanuensis::StagesApiController, type: :request do
 
       get '/amanuensis/api/stages/summarizing/runs/sr1'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Stage run not found')
       expect(response.parsed_body['stage']).to eq('summarizing')
     end
@@ -167,7 +167,7 @@ RSpec.describe Amanuensis::StagesApiController, type: :request do
 
       get '/amanuensis/api/stages/transcribing/runs/missing'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Stage run not found')
     end
 

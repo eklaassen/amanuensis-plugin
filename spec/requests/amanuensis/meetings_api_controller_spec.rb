@@ -98,7 +98,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Failed to fetch meetings')
     end
 
@@ -108,7 +108,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Malformed JSON')
     end
   end
@@ -262,7 +262,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings/missing'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Meeting not found')
     end
   end
