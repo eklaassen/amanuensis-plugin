@@ -16,6 +16,7 @@ module Amanuensis
       params_hash = { limit: PAGE_SIZE }
       params_hash[:before] = params[:before] if params[:before].present?
       params_hash[:status] = params[:status] if params[:status].present?
+      params_hash[:canon_status] = params[:canon_status] if params[:canon_status].present?
 
       result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
 
@@ -60,7 +61,8 @@ module Amanuensis
         recorded_at: formatted_date(meeting['recorded_at']),
         duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
         has_notesbot_transcript: meeting['has_notesbot_transcript'],
-        has_summary: meeting['has_summary']
+        has_summary: meeting['has_summary'],
+        canon_status: meeting['canon_status']
       }
     end
 

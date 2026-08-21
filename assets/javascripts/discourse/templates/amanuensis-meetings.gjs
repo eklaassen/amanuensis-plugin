@@ -1,5 +1,6 @@
 import { LinkTo } from "@ember/routing";
 import { hash } from "@ember/helper";
+import { eq } from "discourse/truth-helpers";
 import AmanuensisEmpty from "../components/amanuensis-empty";
 import AmanuensisError from "../components/amanuensis-error";
 import AmanuensisIcon from "../components/amanuensis-icon";
@@ -13,6 +14,36 @@ export default <template>
         Writers' Room Meetings
       </h1>
     </header>
+
+    <div class="amanuensis-chips">
+      <LinkTo
+        @route="amanuensis-meetings"
+        @query={{hash status=null canon_status=@controller.canon_status before=null}}
+        class="amanuensis-chip {{unless @controller.status 'amanuensis-chip-active'}}"
+      >All</LinkTo>
+      {{#each @controller.statusFilters as |filter|}}
+        <LinkTo
+          @route="amanuensis-meetings"
+          @query={{hash status=filter.value canon_status=@controller.canon_status before=null}}
+          class="amanuensis-chip {{if (eq filter.value @controller.status) 'amanuensis-chip-active'}}"
+        >{{filter.label}}</LinkTo>
+      {{/each}}
+    </div>
+
+    <div class="amanuensis-chips">
+      <LinkTo
+        @route="amanuensis-meetings"
+        @query={{hash status=@controller.status canon_status=null before=null}}
+        class="amanuensis-chip {{unless @controller.canon_status 'amanuensis-chip-active'}}"
+      >All canon states</LinkTo>
+      {{#each @controller.canonStatusFilters as |filter|}}
+        <LinkTo
+          @route="amanuensis-meetings"
+          @query={{hash status=@controller.status canon_status=filter.value before=null}}
+          class="amanuensis-chip {{if (eq filter.value @controller.canon_status) 'amanuensis-chip-active'}}"
+        >{{filter.label}}</LinkTo>
+      {{/each}}
+    </div>
 
     {{#if @controller.model.error}}
       <AmanuensisError @message={{@controller.model.error}} />
@@ -54,13 +85,13 @@ export default <template>
         {{#if @controller.model.pagination.has_more}}
           <LinkTo
             @route="amanuensis-meetings"
-            @query={{hash status=@controller.status before=@controller.model.pagination.next_before}}
+            @query={{hash status=@controller.status canon_status=@controller.canon_status before=@controller.model.pagination.next_before}}
             class="amanuensis-pagination-link"
           >&larr; Older</LinkTo>
         {{/if}}
         <LinkTo
           @route="amanuensis-meetings"
-          @query={{hash status=@controller.status before=null}}
+          @query={{hash status=@controller.status canon_status=@controller.canon_status before=null}}
           class="amanuensis-pagination-link"
         >Newest &rarr;</LinkTo>
       </div>

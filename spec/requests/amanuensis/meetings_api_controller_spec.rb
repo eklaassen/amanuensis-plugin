@@ -78,7 +78,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
         meetings: [
           { 'id' => 'abc123', 'title' => 'Writers Room Standup', 'source' => 'google_meet', 'status' => 'complete',
             'recorded_at' => '2026-07-01T19:00:00Z', 'duration_seconds' => 90, 'has_summary' => true,
-            'has_notesbot_transcript' => false },
+            'has_notesbot_transcript' => false, 'canon_status' => 'applied' },
         ],
       )
 
@@ -90,6 +90,18 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
       expect(meeting['source_label']).to eq('Google meet')
       expect(meeting['duration']).to eq('1m 30s')
       expect(meeting['has_summary']).to eq(true)
+      expect(meeting['canon_status']).to eq('applied')
+    end
+
+    it 'forwards the canon_status filter to the upstream API' do
+      stub_meetings_index
+      get '/amanuensis/api/meetings', params: { canon_status: 'applied' }
+
+      expect(response.status).to eq(200)
+      expect(
+        a_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/meetings})
+          .with(query: hash_including('canon_status' => 'applied')),
+      ).to have_been_made
     end
 
     it 'surfaces an error when the upstream API fails' do
