@@ -29,7 +29,7 @@ module Amanuensis
           meetings: [],
           pagination: { 'has_more' => false },
           error: result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 
@@ -43,7 +43,8 @@ module Amanuensis
       if result.ok?
         render json: serialize_meeting_detail(result.body)
       else
-        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" }
+        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" },
+               status: 502
       end
     end
 
@@ -65,13 +66,16 @@ module Amanuensis
 
     def serialize_meeting_detail(data)
       meeting = data['meeting']
+      proposal = data['proposal']
 
       {
         meeting: serialize_meeting_full(meeting),
         notesbot_groups: notesbot_groups_for(meeting),
         notesbot_turn_count: meeting['notesbot_turns']&.length || 0,
-        proposal: data['proposal'] && data['proposal']['items'].present? ? serialize_proposal(data['proposal']) : nil,
-        history: (data['history'] || []).map { |h| serialize_history_entry(h) },
+        # The full proposal/history breakdown lives on the outcome-detail
+        # page now (OutcomesApiController#show) -- this page only needs to
+        # know whether to show the "See outcome details" link.
+        has_outcome: proposal.present? && proposal['items'].present?,
         stage_runs: (data['stage_runs'] || []).map { |r| timeline_run(r) }
       }
     end
@@ -112,46 +116,6 @@ module Amanuensis
       end
     end
 
-    PROPOSAL_DECISIONS = %w[pending approved rejected edited].freeze
-
-    def serialize_proposal(proposal)
-      items = proposal['items'] || []
-
-      groups = PROPOSAL_DECISIONS.filter_map do |decision|
-        decision_items = items.select { |i| i['decision'] == decision }
-        next if decision_items.empty?
-
-        {
-          decision: decision,
-          decision_label: decision.capitalize,
-          count: decision_items.length,
-          items: decision_items.map { |i| serialize_proposal_item(i, show_edited: decision == 'edited') }
-        }
-      end
-
-      { state: proposal['state'], groups: groups }
-    end
-
-    def serialize_proposal_item(item, show_edited:)
-      {
-        operation: item['operation'],
-        target_type: item['target_type'],
-        target_field: item['target_field'],
-        proposed_value: item['proposed_value'] ? format_value(item['proposed_value']) : nil,
-        edited_value: show_edited && item['edited_value'] ? format_value(item['edited_value']) : nil,
-        show_edited: show_edited
-      }
-    end
-
-    def serialize_history_entry(entry)
-      {
-        created_at: formatted_date(entry['created_at']),
-        source: entry['source'],
-        actor: entry['actor'],
-        summary: entry['summary']
-      }
-    end
-
     SPEAKER_COLORS = %w[
       #4A90D9 #E8734A #50B86C #D94A8E #B86CE8
       #4AD9C8 #E8B04A #6CB850 #D94A4A #4A6CD9
@@ -162,17 +126,6 @@ module Amanuensis
 
       hash = speaker.each_char.map(&:ord).sum
       SPEAKER_COLORS[hash % SPEAKER_COLORS.length]
-    end
-
-    def format_value(value)
-      case value
-      when Hash, Array
-        value.to_json
-      when nil
-        '—'
-      else
-        value.to_s
-      end
     end
 
     def sanitized_summary(summary)

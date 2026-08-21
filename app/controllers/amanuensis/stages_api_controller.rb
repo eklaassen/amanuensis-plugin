@@ -37,7 +37,7 @@ module Amanuensis
           runs: [],
           pagination: { 'has_more' => false },
           error: result.error || "Failed to fetch stage runs (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 
@@ -61,7 +61,7 @@ module Amanuensis
           stage: params[:stage],
           stage_label: humanize_stage(params[:stage]),
           error: result.error || "Stage run not found (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 

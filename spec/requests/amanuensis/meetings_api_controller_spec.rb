@@ -98,7 +98,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Failed to fetch meetings')
     end
 
@@ -108,7 +108,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Malformed JSON')
     end
   end
@@ -202,7 +202,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
       expect(response.parsed_body['notesbot_groups']).to be_nil
     end
 
-    it 'groups proposal items by decision and formats values' do
+    it 'flags has_outcome when the proposal has items -- the full breakdown lives on the outcome page' do
       stub_meeting_show(
         'abc123',
         meeting: { 'id' => 'abc123', 'title' => 'X', 'source' => 'google_meet', 'status' => 'complete' },
@@ -210,23 +210,19 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
           'state' => 'pending_review',
           'items' => [
             { 'decision' => 'pending', 'operation' => 'create', 'target_type' => 'scene', 'proposed_value' => 'A' },
-            { 'decision' => 'edited', 'operation' => 'update', 'target_type' => 'scene', 'proposed_value' => 'B',
-              'edited_value' => 'C' },
           ]
         },
       )
 
       get '/amanuensis/api/meetings/abc123'
 
-      groups = response.parsed_body['proposal']['groups']
-      pending = groups.find { |g| g['decision'] == 'pending' }
-      edited = groups.find { |g| g['decision'] == 'edited' }
-      expect(pending['decision_label']).to eq('Pending')
-      expect(pending['items'].first['proposed_value']).to eq('A')
-      expect(edited['items'].first['edited_value']).to eq('C')
+      body = response.parsed_body
+      expect(body['has_outcome']).to eq(true)
+      expect(body).not_to have_key('proposal')
+      expect(body).not_to have_key('history')
     end
 
-    it 'omits the proposal entirely when there are no items' do
+    it 'flags has_outcome false when there is no proposal or it has no items' do
       stub_meeting_show(
         'abc123',
         meeting: { 'id' => 'abc123', 'title' => 'X', 'source' => 'google_meet', 'status' => 'complete' },
@@ -235,15 +231,13 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings/abc123'
 
-      expect(response.parsed_body['proposal']).to be_nil
+      expect(response.parsed_body['has_outcome']).to eq(false)
     end
 
-    it 'formats history entries and the pipeline timeline' do
+    it 'formats the pipeline timeline' do
       stub_meeting_show(
         'abc123',
         meeting: { 'id' => 'abc123', 'title' => 'X', 'source' => 'google_meet', 'status' => 'complete' },
-        history: [{ 'created_at' => '2026-07-01T19:00:00Z', 'source' => 'writer', 'actor' => 'elliott',
-                    'summary' => 'approved item' }],
         stage_runs: [{ 'stage' => 'transcribing', 'outcome' => 'succeeded', 'started_at' => '2026-07-01T19:00:00Z',
                        'duration_ms' => 5000, 'attempt' => 1 }],
       )
@@ -251,7 +245,6 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
       get '/amanuensis/api/meetings/abc123'
 
       body = response.parsed_body
-      expect(body['history'].first['actor']).to eq('elliott')
       expect(body['stage_runs'].first['stage_label']).to eq('Transcribing')
       expect(body['stage_runs'].first['duration']).to eq('5s')
     end
@@ -262,7 +255,7 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       get '/amanuensis/api/meetings/missing'
 
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Meeting not found')
     end
   end

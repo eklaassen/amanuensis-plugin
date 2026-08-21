@@ -1,6 +1,7 @@
 import { service } from "@ember/service";
 import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisOutcomesRoute extends DiscourseRoute {
   @service currentUser;
@@ -21,12 +22,20 @@ export default class AmanuensisOutcomesRoute extends DiscourseRoute {
   }
 
   model(params) {
+    const status = params.status || "complete";
+
+    // status is carried through on failure too -- setupController below
+    // always reads model.status to drive the status-filter chips' active
+    // highlighting, even in the error state.
     return ajax("/amanuensis/api/outcomes", {
       data: {
-        status: params.status || "complete",
+        status,
         before: params.before || undefined,
       },
-    });
+    }).catch((error) => ({
+      ...modelErrorFrom(error, "Failed to fetch outcomes."),
+      status,
+    }));
   }
 
   // DiscourseRoute (discourse/routes/discourse) collects this into the

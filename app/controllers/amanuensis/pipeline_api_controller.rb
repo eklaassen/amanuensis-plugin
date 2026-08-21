@@ -31,7 +31,7 @@ module Amanuensis
         render json: {
           stage_groups: [],
           error: result.error || "Failed to fetch active pipeline (status #{result.status || 'unknown'})"
-        }
+        }, status: 502
       end
     end
 

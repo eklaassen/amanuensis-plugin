@@ -1,6 +1,7 @@
 import { service } from "@ember/service";
 import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisMeetingsRoute extends DiscourseRoute {
   @service currentUser;
@@ -26,7 +27,7 @@ export default class AmanuensisMeetingsRoute extends DiscourseRoute {
         status: params.status || undefined,
         before: params.before || undefined,
       },
-    });
+    }).catch((error) => modelErrorFrom(error, "Failed to fetch meetings."));
   }
 
   titleToken() {
