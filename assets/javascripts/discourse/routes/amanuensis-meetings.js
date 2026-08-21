@@ -9,6 +9,7 @@ export default class AmanuensisMeetingsRoute extends DiscourseRoute {
 
   queryParams = {
     status: { refreshModel: true },
+    canon_status: { refreshModel: true },
     before: { refreshModel: true },
   };
 
@@ -25,6 +26,7 @@ export default class AmanuensisMeetingsRoute extends DiscourseRoute {
     return ajax("/amanuensis/api/meetings", {
       data: {
         status: params.status || undefined,
+        canon_status: params.canon_status || undefined,
         before: params.before || undefined,
       },
     }).catch((error) => modelErrorFrom(error, "Failed to fetch meetings."));
