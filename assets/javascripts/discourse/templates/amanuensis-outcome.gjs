@@ -18,7 +18,7 @@ export default <template>
 
       <section class="amanuensis-section amanuensis-metadata">
         <div class="amanuensis-metadata-grid">
-          <AmanuensisMetadataItem @label="Recorded" @value={{@controller.model.meeting.recorded_at}} />
+          <AmanuensisMetadataItem @label="Recorded" @timestamp={{@controller.model.meeting.recorded_at}} />
         </div>
         <LinkTo
           @route="amanuensis-meeting"

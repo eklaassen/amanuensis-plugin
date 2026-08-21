@@ -1,4 +1,5 @@
 import AmanuensisBadge from "./amanuensis-badge";
+import AmanuensisLocalTime from "./amanuensis-local-time";
 
 // @runs: array of {stage_label, outcome, started_at, duration, attempt_note, failure_reason, inferred}
 export default <template>
@@ -16,7 +17,7 @@ export default <template>
               {{/if}}
             </div>
             <div class="amanuensis-timeline-meta">
-              {{run.started_at}}
+              <AmanuensisLocalTime @timestamp={{run.started_at}} />
               {{#if run.duration}}
                 &middot;
                 {{run.duration}}
