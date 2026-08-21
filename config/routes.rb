@@ -16,6 +16,7 @@ Amanuensis::Engine.routes.draw do
   get '/stages/:stage' => 'ember_bootstrap#show'
   get '/stages/:stage/runs/:run_id' => 'ember_bootstrap#show'
   get '/outcomes' => 'ember_bootstrap#show'
+  get '/outcomes/:id' => 'ember_bootstrap#show'
   get '/uploads/new' => 'ember_bootstrap#show'
 
   scope '/api', defaults: { format: :json } do
@@ -25,6 +26,7 @@ Amanuensis::Engine.routes.draw do
     get '/stages/:stage/runs' => 'stages_api#show'
     get '/stages/:stage/runs/:run_id' => 'stages_api#run'
     get '/outcomes' => 'outcomes_api#index'
+    get '/outcomes/:id' => 'outcomes_api#show'
     get '/uploads/config' => 'uploads_api#upload_config'
     post '/uploads' => 'uploads_api#create'
     post '/uploads/:upload_id/complete' => 'uploads_api#complete'

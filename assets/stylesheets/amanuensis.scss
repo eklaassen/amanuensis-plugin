@@ -264,6 +264,34 @@
   gap: 2px;
 }
 
+.amanuensis-outcome-meeting-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.amanuensis-meeting-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
+}
+
+.amanuensis-outcome-link {
+  color: var(--d-content-link, var(--tertiary, var(--amanuensis-link)));
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .amanuensis-label {
   font-size: 0.78em;
   font-weight: 600;
