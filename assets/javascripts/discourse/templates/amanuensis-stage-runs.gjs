@@ -4,6 +4,7 @@ import { eq } from "discourse/truth-helpers";
 import AmanuensisBadge from "../components/amanuensis-badge";
 import AmanuensisEmpty from "../components/amanuensis-empty";
 import AmanuensisError from "../components/amanuensis-error";
+import AmanuensisLocalTime from "../components/amanuensis-local-time";
 
 export default <template>
   <div class="amanuensis-container">
@@ -62,7 +63,7 @@ export default <template>
                     <span class="amanuensis-inferred-tag">reconstructed</span>
                   {{/if}}
                 </td>
-                <td>{{run.started_at}}</td>
+                <td><AmanuensisLocalTime @timestamp={{run.started_at}} /></td>
                 <td>{{if run.duration run.duration "—"}}</td>
                 <td>{{run.attempt}}</td>
                 <td><AmanuensisBadge @label={{run.outcome}} @variant={{run.outcome}} /></td>

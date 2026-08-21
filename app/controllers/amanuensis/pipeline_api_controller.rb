@@ -43,7 +43,7 @@ module Amanuensis
         id: meeting['id'],
         title: meeting['title'],
         source_label: meeting['source'].to_s.humanize,
-        updated_relative: relative_time(meeting['updated_at']),
+        updated_at: meeting['updated_at'],
         attempt_note: attempt > 1 ? "attempt #{attempt}" : nil
       }
     end

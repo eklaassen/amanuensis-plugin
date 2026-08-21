@@ -4,6 +4,7 @@ import { eq } from "discourse/truth-helpers";
 import AmanuensisEmpty from "../components/amanuensis-empty";
 import AmanuensisError from "../components/amanuensis-error";
 import AmanuensisIcon from "../components/amanuensis-icon";
+import AmanuensisLocalTime from "../components/amanuensis-local-time";
 import AmanuensisMeetingBadges from "../components/amanuensis-meeting-badges";
 
 export default <template>
@@ -58,7 +59,7 @@ export default <template>
             <div class="amanuensis-card-meta">
               <span class="amanuensis-meta-item">
                 <AmanuensisIcon @name="clock" @size={{14}} />
-                {{meeting.recorded_at}}
+                <AmanuensisLocalTime @timestamp={{meeting.recorded_at}} />
               </span>
               <span class="amanuensis-meta-item">
                 <AmanuensisIcon @name="mic" @size={{14}} />

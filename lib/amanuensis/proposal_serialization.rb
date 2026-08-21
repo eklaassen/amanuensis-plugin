@@ -43,7 +43,7 @@ module Amanuensis
 
     def serialize_history_entry(entry)
       {
-        created_at: formatted_date(entry['created_at']),
+        created_at: entry['created_at'],
         source: entry['source'],
         actor: entry['actor'],
         summary: entry['summary']

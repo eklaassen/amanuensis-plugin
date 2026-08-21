@@ -82,18 +82,15 @@ module Amanuensis
       {
         id: meeting['id'],
         title: meeting['title'],
-        recorded_at: formatted_date(meeting['recorded_at'])
+        recorded_at: meeting['recorded_at']
       }
     end
 
-    # Formatting happens here, not in JS, so this stays in lockstep with the
-    # still-server-rendered meeting/stage pages that use the same
-    # Amanuensis::Formatting#formatted_date -- one date format, one place.
     def serialize_meeting(meeting)
       {
         id: meeting['id'],
         title: meeting['title'],
-        recorded_at: formatted_date(meeting['recorded_at']),
+        recorded_at: meeting['recorded_at'],
         status: meeting['status'],
         failure_reason: meeting['failure_reason']
       }

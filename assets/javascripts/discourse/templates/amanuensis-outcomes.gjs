@@ -4,6 +4,7 @@ import { eq } from "discourse/truth-helpers";
 import AmanuensisBadge from "../components/amanuensis-badge";
 import AmanuensisEmpty from "../components/amanuensis-empty";
 import AmanuensisError from "../components/amanuensis-error";
+import AmanuensisLocalTime from "../components/amanuensis-local-time";
 
 export default <template>
   <div class="amanuensis-container">
@@ -41,7 +42,7 @@ export default <template>
             {{#each @controller.model.meetings as |meeting|}}
               <tr>
                 <td><LinkTo @route="amanuensis-outcome" @model={{meeting.id}}>{{meeting.title}}</LinkTo></td>
-                <td>{{meeting.recorded_at}}</td>
+                <td><AmanuensisLocalTime @timestamp={{meeting.recorded_at}} /></td>
                 <td><AmanuensisBadge @label={{meeting.status}} @variant={{meeting.status}} /></td>
                 <td>{{if meeting.failure_reason meeting.failure_reason "—"}}</td>
               </tr>

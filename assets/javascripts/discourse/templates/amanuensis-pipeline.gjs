@@ -3,6 +3,7 @@ import AmanuensisBadge from "../components/amanuensis-badge";
 import AmanuensisEmpty from "../components/amanuensis-empty";
 import AmanuensisError from "../components/amanuensis-error";
 import AmanuensisIcon from "../components/amanuensis-icon";
+import AmanuensisLocalTime from "../components/amanuensis-local-time";
 
 export default <template>
   <div class="amanuensis-container">
@@ -29,7 +30,7 @@ export default <template>
                 <div class="amanuensis-card-meta">
                   <span class="amanuensis-meta-item">
                     <AmanuensisIcon @name="clock" @size={{14}} />
-                    Updated {{meeting.updated_relative}}
+                    Updated <AmanuensisLocalTime @timestamp={{meeting.updated_at}} @relative={{true}} />
                   </span>
                   {{#if meeting.attempt_note}}
                     <span class="amanuensis-meta-item">{{meeting.attempt_note}}</span>

@@ -27,9 +27,9 @@ export default <template>
           <AmanuensisMetadataItem @label="Stage" @value={{@controller.model.run.stage_label}} />
           <AmanuensisMetadataItem @label="Outcome" @value={{@controller.model.run.outcome}} />
           <AmanuensisMetadataItem @label="Attempt" @value={{@controller.model.run.attempt}} />
-          <AmanuensisMetadataItem @label="Started" @value={{@controller.model.run.started_at}} />
+          <AmanuensisMetadataItem @label="Started" @timestamp={{@controller.model.run.started_at}} />
           {{#if @controller.model.run.finished_at}}
-            <AmanuensisMetadataItem @label="Finished" @value={{@controller.model.run.finished_at}} />
+            <AmanuensisMetadataItem @label="Finished" @timestamp={{@controller.model.run.finished_at}} />
           {{/if}}
           {{#if @controller.model.run.duration}}
             <AmanuensisMetadataItem @label="Duration" @value={{@controller.model.run.duration}} />
