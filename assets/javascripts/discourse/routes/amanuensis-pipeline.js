@@ -1,6 +1,7 @@
 import { service } from "@ember/service";
 import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisPipelineRoute extends DiscourseRoute {
   @service currentUser;
@@ -16,7 +17,9 @@ export default class AmanuensisPipelineRoute extends DiscourseRoute {
   }
 
   model() {
-    return ajax("/amanuensis/api/pipeline");
+    return ajax("/amanuensis/api/pipeline").catch((error) =>
+      modelErrorFrom(error, "Failed to fetch active pipeline.")
+    );
   }
 
   titleToken() {

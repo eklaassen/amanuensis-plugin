@@ -1,6 +1,7 @@
 import { service } from "@ember/service";
 import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisStageRunRoute extends DiscourseRoute {
   @service currentUser;
@@ -13,7 +14,14 @@ export default class AmanuensisStageRunRoute extends DiscourseRoute {
   }
 
   model(params) {
-    return ajax(`/amanuensis/api/stages/${params.stage}/runs/${params.run_id}`);
+    // stage is carried through on failure too -- the template's "back to
+    // runs" link binds its @model to it even in the error state, and an
+    // undefined dynamic segment there breaks route link generation rather
+    // than just looking empty.
+    return ajax(`/amanuensis/api/stages/${params.stage}/runs/${params.run_id}`).catch((error) => ({
+      ...modelErrorFrom(error, "Stage run not found."),
+      stage: params.stage,
+    }));
   }
 
   titleToken() {
