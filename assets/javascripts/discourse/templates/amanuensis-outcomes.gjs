@@ -40,7 +40,7 @@ export default <template>
           <tbody>
             {{#each @controller.model.meetings as |meeting|}}
               <tr>
-                <td><LinkTo @route="amanuensis-meeting" @model={{meeting.id}}>{{meeting.title}}</LinkTo></td>
+                <td><LinkTo @route="amanuensis-outcome" @model={{meeting.id}}>{{meeting.title}}</LinkTo></td>
                 <td>{{meeting.recorded_at}}</td>
                 <td><AmanuensisBadge @label={{meeting.status}} @variant={{meeting.status}} /></td>
                 <td>{{if meeting.failure_reason meeting.failure_reason "—"}}</td>

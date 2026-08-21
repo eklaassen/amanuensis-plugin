@@ -11,5 +11,6 @@ export default function () {
   this.route("amanuensis-stage-runs", { path: "/amanuensis/stages/:stage" });
   this.route("amanuensis-stage-run", { path: "/amanuensis/stages/:stage/runs/:run_id" });
   this.route("amanuensis-outcomes", { path: "/amanuensis/outcomes" });
+  this.route("amanuensis-outcome", { path: "/amanuensis/outcomes/:meeting_id" });
   this.route("amanuensis-upload-new", { path: "/amanuensis/uploads/new" });
 }
