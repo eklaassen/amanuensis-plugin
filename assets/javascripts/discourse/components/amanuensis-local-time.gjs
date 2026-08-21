@@ -23,9 +23,14 @@ export default class AmanuensisLocalTime extends Component {
   }
 
   get displayValue() {
-    const value = this.momentValue;
-    if (!value) {
+    if (!this.args.timestamp) {
       return null;
+    }
+
+    const value = this.momentValue;
+    if (!value.isValid()) {
+      // Malformed upstream data -- show it as-is rather than "Invalid date".
+      return this.args.timestamp;
     }
 
     return this.args.relative ? value.fromNow() : value.format(ABSOLUTE_FORMAT);
