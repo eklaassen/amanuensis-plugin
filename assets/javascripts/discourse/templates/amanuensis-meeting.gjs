@@ -1,9 +1,7 @@
 import { LinkTo } from "@ember/routing";
 import AmanuensisError from "../components/amanuensis-error";
-import AmanuensisHistoryCard from "../components/amanuensis-history-card";
 import AmanuensisMeetingBadges from "../components/amanuensis-meeting-badges";
 import AmanuensisMetadataItem from "../components/amanuensis-metadata-item";
-import AmanuensisProposalItemCard from "../components/amanuensis-proposal-item-card";
 import AmanuensisStageTimeline from "../components/amanuensis-stage-timeline";
 
 export default <template>
@@ -78,43 +76,21 @@ export default <template>
         </section>
       {{/if}}
 
-      {{#if @controller.model.proposal}}
-        <section class="amanuensis-section amanuensis-proposal">
-          <h2>Proposal Items</h2>
-          <p class="amanuensis-proposal-state">State: <strong>{{@controller.model.proposal.state}}</strong></p>
-
-          {{#each @controller.model.proposal.groups as |group|}}
-            <div class="amanuensis-item-group">
-              <h3 class="amanuensis-item-group-header amanuensis-item-group-{{group.decision}}">
-                {{group.decision_label}}
-                <span class="amanuensis-item-count">{{group.count}}</span>
-              </h3>
-              <div class="amanuensis-item-cards">
-                {{#each group.items as |item|}}
-                  <AmanuensisProposalItemCard @item={{item}} />
-                {{/each}}
-              </div>
-            </div>
-          {{/each}}
-        </section>
-      {{/if}}
-
-      {{#if @controller.model.history.length}}
-        <section class="amanuensis-section amanuensis-history">
-          <h2>Applied Changes</h2>
-          <div class="amanuensis-history-cards">
-            {{#each @controller.model.history as |entry|}}
-              <AmanuensisHistoryCard @entry={{entry}} />
-            {{/each}}
-          </div>
-        </section>
-      {{/if}}
-
       {{#if @controller.model.stage_runs.length}}
         <section class="amanuensis-section amanuensis-pipeline-timeline">
           <h2>Pipeline Timeline</h2>
           <AmanuensisStageTimeline @runs={{@controller.model.stage_runs}} />
         </section>
+      {{/if}}
+
+      {{#if @controller.model.has_outcome}}
+        <footer class="amanuensis-meeting-footer">
+          <LinkTo
+            @route="amanuensis-outcome"
+            @model={{@controller.model.meeting.id}}
+            class="amanuensis-outcome-link"
+          >See outcome details &rarr;</LinkTo>
+        </footer>
       {{/if}}
     {{/if}}
   </div>
