@@ -85,6 +85,31 @@ RSpec.describe Amanuensis::OutcomesApiController, type: :request do
       expect(body['meetings'].first['failure_reason']).to eq('Upstream transcription service unavailable')
     end
 
+    it 'only shows meetings whose canon proposal has been applied on the complete tab' do
+      stub_outcomes(status: 'complete')
+
+      get '/amanuensis/api/outcomes'
+
+      expect(response.status).to eq(200)
+      expect(
+        a_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/meetings})
+          .with(query: hash_including('canon_status' => 'applied')),
+      ).to have_been_made
+    end
+
+    it 'does not filter by canon_status on the failed tab -- failed meetings never get a proposal' do
+      stub_outcomes(status: 'failed')
+
+      get '/amanuensis/api/outcomes', params: { status: 'failed' }
+
+      expect(response.status).to eq(200)
+      expect(
+        a_request(:get, %r{\Ahttps://amanuensis\.example\.com/v1/plugin/meetings}).with { |req|
+          !req.uri.query.to_s.include?('canon_status')
+        },
+      ).to have_been_made
+    end
+
     it '404s for a status outside complete/failed' do
       get '/amanuensis/api/outcomes', params: { status: 'transcribing' }
       expect(response.status).to eq(404)

@@ -19,6 +19,12 @@ module Amanuensis
 
     def index
       params_hash = { limit: PAGE_SIZE, status: @status }
+      # "Complete" here means decided, not just "the pipeline finished" -- a
+      # meeting whose canon proposal is still pending/reviewed hasn't
+      # produced an outcome yet, whatever its transcription status says.
+      # Failed meetings never reach analyze, so they never get a proposal --
+      # canon_status doesn't apply to that tab.
+      params_hash[:canon_status] = 'applied' if @status == 'complete'
       params_hash[:before] = params[:before] if params[:before].present?
 
       result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
