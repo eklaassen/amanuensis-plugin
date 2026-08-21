@@ -146,6 +146,19 @@
     color: var(--amanuensis-info-fg);
   }
 
+  &.amanuensis-badge-canon-applied {
+    background: var(--amanuensis-success-bg);
+    color: var(--amanuensis-success-fg);
+  }
+  &.amanuensis-badge-canon-reviewed {
+    background: var(--amanuensis-info-bg);
+    color: var(--amanuensis-info-fg);
+  }
+  &.amanuensis-badge-canon-pending {
+    background: var(--amanuensis-warning-bg);
+    color: var(--amanuensis-warning-fg);
+  }
+
   &.amanuensis-badge-notesbot {
     background: var(--amanuensis-notesbot-bg);
     color: var(--amanuensis-notesbot-fg);
