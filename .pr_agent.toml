@@ -1,8 +1,8 @@
 [config]
-model = "openrouter/deepseek/deepseek-v4-pro"           # review + improve (heavy analysis)
-model_weak = "openrouter/deepseek/deepseek-v4-flash"    # describe (lightweight summary)
-model_reasoning = "openrouter/deepseek/deepseek-v4-flash" # self-reflection scoring
-fallback_models = ["openrouter/anthropic/claude-sonnet-4.6", "openrouter/qwen/qwen3.6-35b-a3b"]
+model = "openrouter/x-ai/grok-4.6"                      # review + improve (heavy analysis)
+model_weak = "openrouter/qwen/qwen3.8-27b"              # describe (lightweight summary)
+model_reasoning = "openrouter/qwen/qwen3.8-27b"         # self-reflection scoring
+fallback_models = ["openrouter/anthropic/claude-sonnet-5", "openrouter/z-ai/glm-5.3"]
 ai_timeout = 600  # Extend to 10 minutes
 large_patch_policy = "clip"  # Truncate oversized diffs instead of erroring
 custom_model_max_tokens = 200000
