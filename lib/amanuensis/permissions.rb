@@ -33,6 +33,18 @@ module Amanuensis
         user.staff?
       end
 
+      # staff || member of the relabel-speakers group (defaults to
+      # "moderators" -- see config/settings.yml). Deliberately its own
+      # setting rather than reusing writing_group: relabeling rewrites a
+      # meeting's stored transcript, a narrower and more sensitive action
+      # than the rest of what writer? gates.
+      def relabel_speakers?(user)
+        return false if user.nil?
+        return true if user.staff?
+
+        group_member?(user, SiteSetting.amanuensis_relabel_speakers_group)
+      end
+
       private
 
       def group_member?(user, group_name)

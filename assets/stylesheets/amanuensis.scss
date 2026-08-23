@@ -293,6 +293,15 @@
   margin-top: 28px;
   padding-top: 16px;
   border-top: 1px solid var(--d-content-border, var(--primary-low, var(--amanuensis-border)));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.amanuensis-relabel-speakers-error {
+  color: var(--d-content-danger, var(--danger, #c53030));
+  font-size: 0.85em;
 }
 
 .amanuensis-outcome-link {

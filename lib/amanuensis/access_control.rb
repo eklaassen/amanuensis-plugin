@@ -36,5 +36,9 @@ module Amanuensis
     def ensure_builder
       raise Discourse::NotFound unless Amanuensis::Permissions.builder?(current_user)
     end
+
+    def ensure_relabel_speakers
+      raise Discourse::NotFound unless Amanuensis::Permissions.relabel_speakers?(current_user)
+    end
   end
 end

@@ -11,7 +11,9 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
     SiteSetting.amanuensis_enabled = true
     SiteSetting.amanuensis_api_url = 'https://amanuensis.example.com'
     SiteSetting.amanuensis_api_secret = 'test-secret'
+    SiteSetting.amanuensis_admin_key = 'admin-secret'
     SiteSetting.amanuensis_viewing_group = ''
+    SiteSetting.amanuensis_relabel_speakers_group = ''
   end
 
   def stub_meetings_index(meetings: [], has_more: false)
@@ -269,6 +271,132 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
 
       expect(response.status).to eq(502)
       expect(response.parsed_body['error']).to include('Meeting not found')
+    end
+  end
+
+  describe '#speaker_access' do
+    fab!(:relabel_group) { Fabricate(:group) }
+
+    def stub_speaker_access_token(id, status: 201, url: "https://amanuensis.example.com/v1/meetings/#{id}/speakers?token=abc")
+      stub_request(:post, "https://amanuensis.example.com/v1/plugin/meetings/#{id}/speaker-access-token")
+        .to_return(
+          status: status,
+          headers: { 'Content-Type' => 'application/json' },
+          body: { token: 'abc', url: url }.to_json
+        )
+    end
+
+    describe 'access control' do
+      it 'blocks an anonymous visitor' do
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+        expect(response.status).to eq(403)
+      end
+
+      it 'blocks a signed-in user who is not in the relabel-speakers group' do
+        sign_in(user)
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+        expect(response.status).to eq(403)
+      end
+
+      it 'blocks a user who IS a viewer/writer but not a relabel_speakers-group member' do
+        # Proves speaker_access is gated on its own permission, not just
+        # reusing ensure_viewer -- see the before_action except:/only: split
+        # on MeetingsApiController.
+        SiteSetting.amanuensis_viewing_group = relabel_group.name
+        relabel_group.add(user)
+
+        sign_in(user)
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+        expect(response.status).to eq(403)
+      end
+
+      it 'allows a member of the configured relabel-speakers group' do
+        SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+        relabel_group.add(user)
+        stub_speaker_access_token('abc123')
+
+        sign_in(user)
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+        expect(response.status).to eq(200)
+      end
+
+      it 'allows staff regardless of group membership' do
+        stub_speaker_access_token('abc123')
+        sign_in(admin)
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+        expect(response.status).to eq(200)
+      end
+    end
+
+    context 'as an authorized user' do
+      before do
+        SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+        relabel_group.add(user)
+        sign_in(user)
+      end
+
+      it 'calls Amanuensis with the admin credential, not the read-only one' do
+        stub_speaker_access_token('abc123')
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(
+          a_request(:post, 'https://amanuensis.example.com/v1/plugin/meetings/abc123/speaker-access-token')
+            .with(headers: { 'Authorization' => 'Bearer admin-secret' })
+        ).to have_been_made
+      end
+
+      it 'returns the url Amanuensis minted' do
+        stub_speaker_access_token(
+          'abc123',
+          url: 'https://amanuensis.example.com/v1/meetings/abc123/speakers?token=abc'
+        )
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(response.status).to eq(200)
+        expect(response.parsed_body['url']).to eq(
+          'https://amanuensis.example.com/v1/meetings/abc123/speakers?token=abc'
+        )
+      end
+
+      it 'surfaces a 502 when Amanuensis cannot mint a token (e.g. unknown meeting)' do
+        stub_speaker_access_token('missing', status: 404)
+        stub_request(:post, 'https://amanuensis.example.com/v1/plugin/meetings/missing/speaker-access-token')
+          .to_return(status: 404, body: 'not found')
+
+        post '/amanuensis/api/meetings/missing/speaker-access'
+
+        expect(response.status).to eq(502)
+        expect(response.parsed_body['error']).to be_present
+      end
+
+      it 'fails closed with a 502, not a bad url, when Amanuensis returns something other than an http(s) link' do
+        stub_speaker_access_token('abc123', url: 'javascript:alert(1)')
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(response.status).to eq(502)
+        expect(response.parsed_body['url']).to be_nil
+      end
+
+      it 'fails closed with a 502 when the upstream body is present but malformed (no url key)' do
+        stub_request(:post, 'https://amanuensis.example.com/v1/plugin/meetings/abc123/speaker-access-token')
+          .to_return(status: 201, headers: { 'Content-Type' => 'application/json' }, body: { token: 'abc' }.to_json)
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(response.status).to eq(502)
+      end
+
+      it 'rejects a malformed meeting id without calling Amanuensis at all' do
+        post '/amanuensis/api/meetings/not-valid%21/speaker-access'
+
+        expect(response.status).to eq(404)
+        expect(
+          a_request(:post, %r{/v1/plugin/meetings/.*/speaker-access-token})
+        ).not_to have_been_made
+      end
     end
   end
 end

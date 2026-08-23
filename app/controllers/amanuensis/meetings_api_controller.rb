@@ -6,7 +6,12 @@ module Amanuensis
   # /amanuensis/meetings/:id (assets/javascripts/discourse/routes/
   # amanuensis-meetings.js and amanuensis-meeting.js).
   class MeetingsApiController < Amanuensis::ApiController
-    before_action :ensure_viewer
+    # speaker_access is gated on its own, narrower permission -- excluded here
+    # so a relabel_speakers-group member who isn't ALSO a viewer (e.g. not in
+    # amanuensis_viewing_group) doesn't get a confusing 403 from this check
+    # before ever reaching ensure_relabel_speakers below.
+    before_action :ensure_viewer, except: [:speaker_access]
+    before_action :ensure_relabel_speakers, only: [:speaker_access]
 
     include Amanuensis::Formatting
 
@@ -49,7 +54,43 @@ module Amanuensis
       end
     end
 
+    # POST /amanuensis/api/meetings/:id/speaker-access -- mints a short-lived
+    # capability token scoped to this one meeting and hands back the URL to
+    # Amanuensis's relabel-speakers page. ensure_relabel_speakers (above) is
+    # the actual gate: by the time this runs, the requesting user has already
+    # been checked against SiteSetting.amanuensis_relabel_speakers_group.
+    # Amanuensis itself never learns which Discourse user asked -- only that
+    # an authorized plugin call happened for this meeting id, via the admin
+    # (not reader) credential, matching the ingestion/upload endpoints'
+    # privilege tier for the same reason: this mints a write-granting
+    # credential, not just a read.
+    def speaker_access
+      raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
+
+      result = Amanuensis::ApiClient.admin.post("/v1/plugin/meetings/#{params[:id]}/speaker-access-token")
+      url = result.ok? && result.body.is_a?(Hash) ? result.body['url'] : nil
+
+      if url.present? && valid_relabel_url?(url)
+        render json: { url: url }
+      else
+        render json: {
+          error: result.error || "Could not create a relabel link (status #{result.status || 'unknown'})"
+        }, status: 502
+      end
+    end
+
     private
+
+    # Amanuensis's own speaker-access-token endpoint already only ever mints
+    # an http(s) url pointed at itself -- this is defense in depth against a
+    # malformed/unexpected response shape, not a defense against Amanuensis
+    # itself (a trusted first-party service), so it can never navigate the
+    # tab openRelabelSpeakers() opens to something unexpected.
+    def valid_relabel_url?(url)
+      URI.parse(url).is_a?(URI::HTTP) # covers both URI::HTTP and its URI::HTTPS subclass
+    rescue URI::InvalidURIError
+      false
+    end
 
     def serialize_meeting_summary(meeting)
       {
