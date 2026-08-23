@@ -68,9 +68,10 @@ module Amanuensis
       raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
 
       result = Amanuensis::ApiClient.admin.post("/v1/plugin/meetings/#{params[:id]}/speaker-access-token")
+      url = result.ok? && result.body.is_a?(Hash) ? result.body['url'] : nil
 
-      if result.ok?
-        render json: { url: result.body['url'] }
+      if url.present? && valid_relabel_url?(url)
+        render json: { url: url }
       else
         render json: {
           error: result.error || "Could not create a relabel link (status #{result.status || 'unknown'})"
@@ -79,6 +80,17 @@ module Amanuensis
     end
 
     private
+
+    # Amanuensis's own speaker-access-token endpoint already only ever mints
+    # an http(s) url pointed at itself -- this is defense in depth against a
+    # malformed/unexpected response shape, not a defense against Amanuensis
+    # itself (a trusted first-party service), so it can never navigate the
+    # tab openRelabelSpeakers() opens to something unexpected.
+    def valid_relabel_url?(url)
+      URI.parse(url).is_a?(URI::HTTP) # covers both URI::HTTP and its URI::HTTPS subclass
+    rescue URI::InvalidURIError
+      false
+    end
 
     def serialize_meeting_summary(meeting)
       {

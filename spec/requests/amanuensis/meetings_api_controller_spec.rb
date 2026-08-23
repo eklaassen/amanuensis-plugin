@@ -371,6 +371,24 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
         expect(response.parsed_body['error']).to be_present
       end
 
+      it 'fails closed with a 502, not a bad url, when Amanuensis returns something other than an http(s) link' do
+        stub_speaker_access_token('abc123', url: 'javascript:alert(1)')
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(response.status).to eq(502)
+        expect(response.parsed_body['url']).to be_nil
+      end
+
+      it 'fails closed with a 502 when the upstream body is present but malformed (no url key)' do
+        stub_request(:post, 'https://amanuensis.example.com/v1/plugin/meetings/abc123/speaker-access-token')
+          .to_return(status: 201, headers: { 'Content-Type' => 'application/json' }, body: { token: 'abc' }.to_json)
+
+        post '/amanuensis/api/meetings/abc123/speaker-access'
+
+        expect(response.status).to eq(502)
+      end
+
       it 'rejects a malformed meeting id without calling Amanuensis at all' do
         post '/amanuensis/api/meetings/not-valid%21/speaker-access'
 
