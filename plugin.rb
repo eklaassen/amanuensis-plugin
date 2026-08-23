@@ -27,4 +27,7 @@ after_initialize do
   # checks in JS.
   add_to_serializer(:current_user, :can_view_amanuensis) { Amanuensis::Permissions.viewer?(object) }
   add_to_serializer(:current_user, :can_write_amanuensis) { Amanuensis::Permissions.writer?(object) }
+  add_to_serializer(:current_user, :can_relabel_speakers_amanuensis) do
+    Amanuensis::Permissions.relabel_speakers?(object)
+  end
 end

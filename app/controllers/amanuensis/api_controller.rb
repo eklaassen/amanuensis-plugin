@@ -45,5 +45,9 @@ module Amanuensis
     def ensure_builder
       raise Discourse::InvalidAccess unless Amanuensis::Permissions.builder?(current_user)
     end
+
+    def ensure_relabel_speakers
+      raise Discourse::InvalidAccess unless Amanuensis::Permissions.relabel_speakers?(current_user)
+    end
   end
 end

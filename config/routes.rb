@@ -22,6 +22,7 @@ Amanuensis::Engine.routes.draw do
   scope '/api', defaults: { format: :json } do
     get '/meetings' => 'meetings_api#index'
     get '/meetings/:id' => 'meetings_api#show'
+    post '/meetings/:id/speaker-access' => 'meetings_api#speaker_access'
     get '/pipeline' => 'pipeline_api#active'
     get '/stages/:stage/runs' => 'stages_api#show'
     get '/stages/:stage/runs/:run_id' => 'stages_api#run'

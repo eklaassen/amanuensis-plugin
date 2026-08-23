@@ -12,6 +12,7 @@ RSpec.describe Amanuensis::Permissions do
   before do
     SiteSetting.amanuensis_viewing_group = ''
     SiteSetting.amanuensis_writing_group = ''
+    SiteSetting.amanuensis_relabel_speakers_group = ''
   end
 
   describe '.viewer?' do
@@ -150,6 +151,71 @@ RSpec.describe Amanuensis::Permissions do
 
     it 'is true for an admin' do
       expect(described_class.builder?(admin)).to eq(true)
+    end
+  end
+
+  describe '.relabel_speakers?' do
+    it 'is false for an anonymous (nil) user' do
+      expect(described_class.relabel_speakers?(nil)).to eq(false)
+    end
+
+    context 'with no relabel-speakers group configured (blank setting)' do
+      it 'is false for a regular user' do
+        expect(described_class.relabel_speakers?(user)).to eq(false)
+      end
+
+      it 'is false even for a member of the (unrelated) writing group' do
+        SiteSetting.amanuensis_writing_group = group.name
+        group.add(user)
+
+        expect(described_class.relabel_speakers?(user)).to eq(false)
+      end
+
+      it 'is true for a moderator' do
+        expect(described_class.relabel_speakers?(moderator)).to eq(true)
+      end
+
+      it 'is true for an admin' do
+        expect(described_class.relabel_speakers?(admin)).to eq(true)
+      end
+    end
+
+    context 'with a relabel-speakers group configured' do
+      before { SiteSetting.amanuensis_relabel_speakers_group = group.name }
+
+      it 'is false for a regular user who is not a member' do
+        expect(described_class.relabel_speakers?(user)).to eq(false)
+      end
+
+      it 'is true for a member of the relabel-speakers group' do
+        group.add(user)
+        expect(described_class.relabel_speakers?(user)).to eq(true)
+      end
+
+      it 'is false for a member of a different (writing) group only' do
+        SiteSetting.amanuensis_writing_group = other_group.name
+        other_group.add(user)
+
+        expect(described_class.relabel_speakers?(user)).to eq(false)
+      end
+
+      it 'is true for a moderator regardless of membership' do
+        expect(described_class.relabel_speakers?(moderator)).to eq(true)
+      end
+
+      it 'is true for an admin regardless of membership' do
+        expect(described_class.relabel_speakers?(admin)).to eq(true)
+      end
+    end
+
+    context 'with the actual out-of-the-box default (unset in this example group\'s before block)' do
+      it 'defaults to "moderators" -- a plain user in that real Discourse group gets access' do
+        SiteSetting.amanuensis_relabel_speakers_group = SiteSetting.defaults[:amanuensis_relabel_speakers_group]
+        moderators_group = Group.find(Group::AUTO_GROUPS[:moderators])
+        moderators_group.add(user)
+
+        expect(described_class.relabel_speakers?(user)).to eq(true)
+      end
     end
   end
 end

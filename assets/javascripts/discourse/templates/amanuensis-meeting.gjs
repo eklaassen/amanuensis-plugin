@@ -1,4 +1,6 @@
 import { LinkTo } from "@ember/routing";
+import { on } from "@ember/modifier";
+import { or } from "discourse/truth-helpers";
 import AmanuensisError from "../components/amanuensis-error";
 import AmanuensisMeetingBadges from "../components/amanuensis-meeting-badges";
 import AmanuensisMetadataItem from "../components/amanuensis-metadata-item";
@@ -83,13 +85,29 @@ export default <template>
         </section>
       {{/if}}
 
-      {{#if @controller.model.has_outcome}}
+      {{#if (or @controller.model.has_outcome @controller.currentUser.can_relabel_speakers_amanuensis)}}
         <footer class="amanuensis-meeting-footer">
-          <LinkTo
-            @route="amanuensis-outcome"
-            @model={{@controller.model.meeting.id}}
-            class="amanuensis-outcome-link"
-          >See outcome details &rarr;</LinkTo>
+          {{#if @controller.model.has_outcome}}
+            <LinkTo
+              @route="amanuensis-outcome"
+              @model={{@controller.model.meeting.id}}
+              class="amanuensis-outcome-link"
+            >See outcome details &rarr;</LinkTo>
+          {{/if}}
+
+          {{! Visibility here is a UX nicety only -- the real gate is server-side
+              (ensure_relabel_speakers on MeetingsApiController#speaker_access). }}
+          {{#if @controller.currentUser.can_relabel_speakers_amanuensis}}
+            <button
+              type="button"
+              class="btn amanuensis-relabel-speakers-link"
+              disabled={{@controller.relabelBusy}}
+              {{on "click" @controller.openRelabelSpeakers}}
+            >{{if @controller.relabelBusy "Opening…" "Relabel speakers"}}</button>
+            {{#if @controller.relabelError}}
+              <span class="amanuensis-relabel-speakers-error">{{@controller.relabelError}}</span>
+            {{/if}}
+          {{/if}}
         </footer>
       {{/if}}
     {{/if}}

@@ -23,3 +23,13 @@ plugins:
   amanuensis_writing_group:
     default: ""
     type: string
+
+  # Gates the speaker-relabel screen specifically -- a narrower, higher-trust
+  # action than viewing/writing (it edits a meeting's stored transcript), so
+  # it gets its own group rather than reusing amanuensis_writing_group.
+  # Defaults to Discourse's own built-in "moderators" group (id 2) rather
+  # than blank, so it's usable out of the box without the admin having to
+  # configure anything first.
+  amanuensis_relabel_speakers_group:
+    default: "moderators"
+    type: string
