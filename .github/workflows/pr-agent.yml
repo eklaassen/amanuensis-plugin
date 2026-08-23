@@ -5,9 +5,9 @@
 # Complements the existing Gemini reviewers (pr-summary.yml runs an automatic
 # review; code-review.yml runs on `/gemini-review`).
 #
-# Model: DeepSeek-V4-Pro via OpenRouter, with Claude Sonnet 4.6 as fallback —
-# matching the amanuensis app's OpenRouter + ZDR stack. Both run
-# ZERO-DATA-RETENTION only: ZDR is enforced at the API-key level on
+# Model: Grok 4.6 via OpenRouter (confirmed ZDR-tagged endpoint), with Claude
+# Sonnet 5 and GLM-5.3 as fallbacks — matching the amanuensis app's OpenRouter
+# + ZDR stack. All run ZERO-DATA-RETENTION only: ZDR is enforced at the API-key level on
 # OpenRouter's side — no need for per-request extra_body (which the bundled
 # LiteLLM doesn't support). When generating the key at openrouter.ai/keys,
 # scope it to Zero Data Retention endpoints only (or enable ZDR account-wide
@@ -23,14 +23,14 @@
 # events (never on `synchronize`), a cancelled Describe was "skipped forever"
 # until someone manually ran `/describe`. Splitting the work fixes that:
 #
-#   describe  — lightweight (model_weak = deepseek flash; oversized diffs are
+#   describe  — lightweight (model_weak = qwen3.8-27b; oversized diffs are
 #               clipped, not errored). NEVER cancelled and NOT gated on PR size,
 #               so it always completes and is never skipped. Its own concurrency
 #               group queues a stacked reopen/ready behind the running describe
 #               instead of killing it.
-#   review    — auto-run PR review (model = deepseek pro). Gated on PR size
+#   review    — auto-run PR review (model = grok-4.6). Gated on PR size
 #               and cancellable: a newer event for the SAME PR supersedes an
-#               older in-flight run so we don't burn the pro model twice.
+#               older in-flight run so we don't burn the heavy model twice.
 #   command   — on-demand slash commands. Never cancelled; every command is
 #               intentional and runs to completion.
 
@@ -81,7 +81,7 @@ jobs:
   # ── Auto: Review ───────────────────────────────────────────────────────────
   # Auto-run PR review. Gated on PR size (< 50 changed files) and cancellable:
   # a newer open/reopen/ready event for the SAME PR supersedes an older in-flight
-  # review run so the expensive "pro" model isn't billed twice for stale work.
+  # review run so the expensive heavy-analysis model isn't billed twice for stale work.
   review:
     if: >
       github.event_name == 'pull_request' &&
