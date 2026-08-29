@@ -51,6 +51,12 @@ module Amanuensis
     def self.schema_violations(method:, path:, body:)
       schema = route(method: method, path: path)['request']
       return [] if schema.nil?
+      # A caller capturing a request body from a stub (e.g. one that only
+      # matches on the right credential) gets nil here if the expected
+      # request never happened at all -- report that as a clear violation
+      # instead of crashing on transform_keys, so a missed request fails the
+      # contract assertion with a readable message rather than a stack trace.
+      return ["request body was missing or not an object (got #{body.class})"] unless body.is_a?(Hash)
 
       string_body = body.transform_keys(&:to_s)
       violations = []

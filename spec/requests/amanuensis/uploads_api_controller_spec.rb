@@ -152,9 +152,20 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
     end
 
     it 'sends a request body that matches the contract schema for this route' do
+      # An ad hoc stub, not stub_presign -- but still credential-checked
+      # (.with's block only captures/matches on the right Authorization
+      # header), so this doesn't quietly bypass the credential enforcement
+      # every other stub in this file has: a wrong upstream secret fails at
+      # `post` below with "no stub matched," same as everywhere else.
       captured_body = nil
+      credential = Amanuensis::PluginContractFixture.credential_for(method: 'POST', path: '/v1/plugin/uploads')
       stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads')
-        .with { |request| captured_body = JSON.parse(request.body); true }
+        .with { |request|
+          next false unless request.headers['Authorization'] == "Bearer #{secret_for(credential)}"
+
+          captured_body = JSON.parse(request.body)
+          true
+        }
         .to_return(status: 201, headers: { 'Content-Type' => 'application/json' },
                    body: { upload_id: 'upl_1', upload_url: 'https://s3.example.com/signed',
                            content_type: 'audio/mp4' }.to_json)
@@ -235,8 +246,16 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
     it 'sends a request body that matches the contract schema for this route' do
       presign_as(user)
       captured_body = nil
+      credential = Amanuensis::PluginContractFixture.credential_for(
+        method: 'POST', path: '/v1/plugin/uploads/:upload_id/complete'
+      )
       stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads/upl_1/complete')
-        .with { |request| captured_body = JSON.parse(request.body); true }
+        .with { |request|
+          next false unless request.headers['Authorization'] == "Bearer #{secret_for(credential)}"
+
+          captured_body = JSON.parse(request.body)
+          true
+        }
         .to_return(status: 201, headers: { 'Content-Type' => 'application/json' },
                    body: { meeting_id: 'upl_1' }.to_json)
 

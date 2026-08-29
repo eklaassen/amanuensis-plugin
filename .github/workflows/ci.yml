@@ -43,14 +43,29 @@ jobs:
     # exists.
     name: Contract Drift
     runs-on: ubuntu-latest
+    # A fork PR can't read this repo's secrets (GitHub never exposes them to
+    # fork-triggered pull_request runs) -- CONTRACT_SYNC_TOKEN would be empty
+    # and this job would 401 in a way that looks like real drift. Skip it
+    # there instead; it still runs on every push and on same-repo PRs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v4
       - name: Fetch the current contract from amanuensis@develop
         env:
           GH_TOKEN: ${{ secrets.CONTRACT_SYNC_TOKEN }}
         run: |
-          gh api repos/eklaassen/amanuensis/contents/contract/plugin-api.v1.json \
-            --jq '.content' | base64 -d > /tmp/upstream-contract.json
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::CONTRACT_SYNC_TOKEN is not set -- add a read-scoped PAT for eklaassen/amanuensis as a repo secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          # ?ref=develop pinned explicitly -- the Contents API falls back to
+          # amanuensis's *default* branch when ref is omitted, which happens
+          # to be develop today but isn't guaranteed to stay that way.
+          # application/vnd.github.raw returns the file bytes directly, no
+          # base64/jq decoding step to get subtly wrong.
+          gh api -H "Accept: application/vnd.github.raw" \
+            "repos/eklaassen/amanuensis/contents/contract/plugin-api.v1.json?ref=develop" \
+            > /tmp/upstream-contract.json
       - name: Fail if the vendored fixture differs from amanuensis@develop
         run: diff spec/fixtures/plugin-api.v1.json /tmp/upstream-contract.json
 
