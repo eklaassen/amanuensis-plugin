@@ -28,6 +28,32 @@ jobs:
             exit 1
           fi
 
+  contract-drift:
+    # eklaassen/amanuensis is the source of truth for PLUGIN_CONTRACT
+    # (amanuensis#229) -- spec/fixtures/plugin-api.v1.json here is a vendored
+    # copy, not the original. This job re-fetches the real thing from
+    # amanuensis's default branch and fails if the vendored copy has drifted,
+    # the same "someone changed one side and not the other" check amanuensis's
+    # own `contract` CI job runs against its emitted output.
+    #
+    # amanuensis is private, so this needs a read-scoped CONTRACT_SYNC_TOKEN
+    # repo secret (a PAT with read access to eklaassen/amanuensis) -- add one
+    # under Settings > Secrets and variables > Actions before this job can
+    # pass. It will fail with a 404/401 from the API call until that secret
+    # exists.
+    name: Contract Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the current contract from amanuensis@develop
+        env:
+          GH_TOKEN: ${{ secrets.CONTRACT_SYNC_TOKEN }}
+        run: |
+          gh api repos/eklaassen/amanuensis/contents/contract/plugin-api.v1.json \
+            --jq '.content' | base64 -d > /tmp/upstream-contract.json
+      - name: Fail if the vendored fixture differs from amanuensis@develop
+        run: diff spec/fixtures/plugin-api.v1.json /tmp/upstream-contract.json
+
   # Runs the plugin's RSpec suite inside a full Discourse host app, using
   # Discourse's official reusable workflow (checks out core, installs this
   # plugin into plugins/amanuensis, provisions Postgres + Redis, runs specs).
