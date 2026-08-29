@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require_relative '../../support/plugin_contract'
 
 RSpec.describe Amanuensis::UploadsApiController, type: :request do
   fab!(:user)
@@ -29,15 +30,35 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
   after { RateLimiter.disable }
 
+  # The secret value a given fixture credential (:admin/:reader) resolves to
+  # under this file's SiteSettings -- not hardcoded, so a contract change
+  # (say, this route moving from adminSecret to pluginSecret) changes what
+  # every stub below expects without anyone having to notice and update a
+  # literal string.
+  def secret_for(credential)
+    credential == :admin ? SiteSetting.amanuensis_admin_key : SiteSetting.amanuensis_api_secret
+  end
+
+  # .with(headers:) here is load-bearing, not incidental: every example in
+  # this file calls stub_presign, so if the controller ever regressed to the
+  # wrong credential, WebMock would refuse to match ANY of them ("no stub
+  # matched") instead of the drift being invisible to everything but one
+  # dedicated example.
   def stub_presign(status: 201,
                    body: { upload_id: 'upl_1', upload_url: 'https://s3.example.com/signed',
                            content_type: 'audio/mp4' })
+    credential = Amanuensis::PluginContractFixture.credential_for(method: 'POST', path: '/v1/plugin/uploads')
     stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads')
+      .with(headers: { 'Authorization' => "Bearer #{secret_for(credential)}" })
       .to_return(status: status, headers: { 'Content-Type' => 'application/json' }, body: body.to_json)
   end
 
   def stub_complete(id: 'upl_1', status: 201, body: { meeting_id: 'upl_1' })
+    credential = Amanuensis::PluginContractFixture.credential_for(
+      method: 'POST', path: '/v1/plugin/uploads/:upload_id/complete'
+    )
     stub_request(:post, "https://amanuensis.example.com/v1/plugin/uploads/#{id}/complete")
+      .with(headers: { 'Authorization' => "Bearer #{secret_for(credential)}" })
       .to_return(status: status, headers: { 'Content-Type' => 'application/json' }, body: body.to_json)
   end
 
@@ -116,13 +137,34 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
     end
 
     it 'authenticates upstream with the admin key, not the read secret' do
+      # Redundant with stub_presign's own header matcher now (a wrong
+      # credential would fail the `post` call itself, not just this
+      # assertion) -- kept explicit since it's the clearest statement of
+      # intent for anyone reading this file.
       stub_presign
       post '/amanuensis/api/uploads', params: valid_payload
 
+      credential = Amanuensis::PluginContractFixture.credential_for(method: 'POST', path: '/v1/plugin/uploads')
       expect(
         a_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads')
-          .with(headers: { 'Authorization' => 'Bearer admin-secret' })
+          .with(headers: { 'Authorization' => "Bearer #{secret_for(credential)}" })
       ).to have_been_made
+    end
+
+    it 'sends a request body that matches the contract schema for this route' do
+      captured_body = nil
+      stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads')
+        .with { |request| captured_body = JSON.parse(request.body); true }
+        .to_return(status: 201, headers: { 'Content-Type' => 'application/json' },
+                   body: { upload_id: 'upl_1', upload_url: 'https://s3.example.com/signed',
+                           content_type: 'audio/mp4' }.to_json)
+
+      post '/amanuensis/api/uploads', params: valid_payload
+
+      violations = Amanuensis::PluginContractFixture.schema_violations(
+        method: 'POST', path: '/v1/plugin/uploads', body: captured_body
+      )
+      expect(violations).to be_empty
     end
 
     it 'rejects a disallowed extension without calling upstream' do
@@ -171,6 +213,39 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
       expect(response.status).to eq(200)
       expect(response.parsed_body['meeting_id']).to eq('upl_1')
+    end
+
+    it 'authenticates the complete call upstream with the admin key, not the read secret' do
+      # The presign call already had this assertion; the complete call
+      # didn't -- a gap noted in amanuensis-plugin#39's evidence.
+      presign_as(user)
+      stub_complete
+
+      post '/amanuensis/api/uploads/upl_1/complete', params: valid_payload
+
+      credential = Amanuensis::PluginContractFixture.credential_for(
+        method: 'POST', path: '/v1/plugin/uploads/:upload_id/complete'
+      )
+      expect(
+        a_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads/upl_1/complete')
+          .with(headers: { 'Authorization' => "Bearer #{secret_for(credential)}" })
+      ).to have_been_made
+    end
+
+    it 'sends a request body that matches the contract schema for this route' do
+      presign_as(user)
+      captured_body = nil
+      stub_request(:post, 'https://amanuensis.example.com/v1/plugin/uploads/upl_1/complete')
+        .with { |request| captured_body = JSON.parse(request.body); true }
+        .to_return(status: 201, headers: { 'Content-Type' => 'application/json' },
+                   body: { meeting_id: 'upl_1' }.to_json)
+
+      post '/amanuensis/api/uploads/upl_1/complete', params: valid_payload
+
+      violations = Amanuensis::PluginContractFixture.schema_violations(
+        method: 'POST', path: '/v1/plugin/uploads/:upload_id/complete', body: captured_body
+      )
+      expect(violations).to be_empty
     end
 
     it 'refuses to complete an upload belonging to another writer' do
