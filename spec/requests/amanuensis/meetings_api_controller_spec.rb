@@ -399,4 +399,33 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
       end
     end
   end
+
+  describe "CSRF protection" do
+    fab!(:relabel_group, :group)
+
+    # See uploads_api_controller_spec.rb's identical block -- same
+    # ApiController base, same protect_from_forgery with: :exception, same
+    # reason allow_forgery_protection needs to be turned back on here.
+    around do |example|
+      original = ActionController::Base.allow_forgery_protection
+      ActionController::Base.allow_forgery_protection = true
+      begin
+        example.run
+      ensure
+        ActionController::Base.allow_forgery_protection = original
+      end
+    end
+
+    before do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      relabel_group.add(user)
+      sign_in(user)
+    end
+
+    it "refuses a POST .../speaker-access with no X-CSRF-Token" do
+      post "/amanuensis/api/meetings/abc123/speaker-access"
+
+      expect(response.status).to eq(422)
+    end
+  end
 end
