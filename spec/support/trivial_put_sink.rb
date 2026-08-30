@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'socket'
+require "socket"
 
 module Amanuensis
   # A real, minimal HTTP server for system specs to point a stubbed
@@ -27,10 +27,10 @@ module Amanuensis
       # is additionally force-mapped to [::1] (IPv6), not 127.0.0.1 -- so
       # this binds both families on the same port rather than guessing which
       # one "localhost" actually resolves to wherever this runs.
-      @servers = [TCPServer.new('127.0.0.1', 0)]
+      @servers = [TCPServer.new("127.0.0.1", 0)]
       port = @servers.first.addr[1]
       begin
-        @servers << TCPServer.new('::1', port)
+        @servers << TCPServer.new("::1", port)
       rescue Errno::EADDRINUSE, Errno::EADDRNOTAVAIL, SocketError
         nil # No IPv6 loopback on this host at all -- IPv4 alone still covers plain `localhost` resolution
       end
@@ -38,14 +38,23 @@ module Amanuensis
       @threads = @servers.map { |server| Thread.new { serve(server) } }
     end
 
-    def url(path = '/sink')
+    def url(path = "/sink")
       "http://localhost:#{@servers.first.addr[1]}#{path}"
     end
 
     def stop
-      @threads.each(&:kill)
-      @threads.each(&:join)
+      # Close first, not kill-then-join: closing unblocks a thread parked in
+      # #accept by raising IOError/EBADF into it (the #serve rescue below is
+      # written for exactly that), which is a real, guaranteed interrupt --
+      # MRI isn't guaranteed to interrupt a thread blocked in a blocking
+      # accept(2) via Thread#kill alone, so kill-first could join forever.
+      # A thread already past #accept and into `sleep @response_delay`
+      # doesn't get interrupted by closing the server (that only affects
+      # the server socket, not its already-accepted client connection), so
+      # #join gets a bounded wait and only kill is the fallback for that
+      # case, not the primary shutdown path.
       @servers.each(&:close)
+      @threads.each { |thread| thread.join(2) || thread.kill }
     end
 
     private
@@ -74,15 +83,15 @@ module Amanuensis
       request_line = client.gets
       return unless request_line
 
-      method = request_line.split(' ', 2).first
+      method = request_line.split(" ", 2).first
 
       headers = {}
       while (line = client.gets) && line != "\r\n"
-        key, value = line.split(':', 2)
+        key, value = line.split(":", 2)
         headers[key.strip.downcase] = value.strip if key && value
       end
 
-      content_length = headers['content-length'].to_i
+      content_length = headers["content-length"].to_i
       client.read(content_length) if content_length.positive?
 
       # A cross-origin PUT with a custom Content-Type header (this route
@@ -92,14 +101,18 @@ module Amanuensis
       # CORS policy; this sink has to too, or the browser blocks the actual
       # PUT before it ever leaves -- surfacing as a generic XHR network
       # error with no more specific signal than that.
-      if method == 'OPTIONS'
-        client.write("HTTP/1.1 204 No Content\r\n#{CORS_HEADERS}Content-Length: 0\r\nConnection: close\r\n\r\n")
+      if method == "OPTIONS"
+        client.write(
+          "HTTP/1.1 204 No Content\r\n#{CORS_HEADERS}Content-Length: 0\r\nConnection: close\r\n\r\n",
+        )
         return
       end
 
       sleep @response_delay if @response_delay.positive?
 
-      client.write("HTTP/1.1 200 OK\r\n#{CORS_HEADERS}Content-Length: 0\r\nConnection: close\r\n\r\n")
+      client.write(
+        "HTTP/1.1 200 OK\r\n#{CORS_HEADERS}Content-Length: 0\r\nConnection: close\r\n\r\n",
+      )
     end
   end
 end

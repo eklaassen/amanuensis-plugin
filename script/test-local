@@ -125,29 +125,29 @@ run_tests() {
     echo "Container not running -- run 'script/test-local up$([ -n "$BROWSERS" ] && echo " --browsers")' first." >&2
     exit 1
   fi
+  local target="${1:-plugins/amanuensis/spec}"
   # Without --browsers, this container has no Chromium at all (see `up`), so
-  # the default whole-suite target lists every spec/ subdirectory except
-  # system/ explicitly -- matches CI's own backend_tests/system_tests split,
-  # which excludes it the same way for the same reason. (--exclude-pattern
-  # looked like the more obvious way to do this, but plain bin/rspec doesn't
-  # actually honor it against an explicit directory argument the way CI's
-  # bin/turbo_rspec does -- confirmed directly, not assumed.) An explicit
-  # path argument (including one inside spec/system) is trusted as
-  # intentional and passed through as-is, no exclusion applied.
-  local target
-  if [ -n "${1:-}" ]; then
-    target="$1"
-  elif [ -n "$BROWSERS" ]; then
-    target="plugins/amanuensis/spec"
-  else
-    target="plugins/amanuensis/spec/lib plugins/amanuensis/spec/requests plugins/amanuensis/spec/plugin_spec.rb"
+  # the default whole-suite run excludes spec/system by RSpec's own tag
+  # metadata (Discourse's rails_helper infers type: :system from file
+  # location for every spec under spec/system/, so --tag ~type:system
+  # excludes exactly that regardless of what other spec/ subdirectories
+  # exist or get added later) -- matches CI's own backend_tests/
+  # system_tests split, which excludes it the same way for the same reason.
+  # (--exclude-pattern looked like the more obvious way to do this, but
+  # plain bin/rspec doesn't actually honor it against an explicit directory
+  # argument the way CI's bin/turbo_rspec does -- confirmed directly, not
+  # assumed.) An explicit path argument is trusted as intentional and gets
+  # no tag filter -- pointing it at something inside spec/system still runs.
+  local tag_flag=""
+  if [ -z "$BROWSERS" ] && [ -z "${1:-}" ]; then
+    tag_flag="--tag ~type:system"
   fi
   # -t only if stdout is actually a terminal -- `docker exec -it` errors
   # ("the input device is not a TTY") when run from a script, CI, or a
   # non-interactive agent shell.
   local tty_flag=""
   [ -t 1 ] && tty_flag="-t"
-  docker exec $tty_flag "$CONTAINER_NAME" bash -c "bin/rspec $target --format documentation"
+  docker exec $tty_flag "$CONTAINER_NAME" bash -c "bin/rspec '$target' $tag_flag --format documentation"
 }
 
 down() {
