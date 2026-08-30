@@ -44,6 +44,41 @@ config/settings.yml           # Plugin settings
 plugin.rb                     # Entry point and routes
 ```
 
+### Running tests locally
+
+This repo has no Gemfile or `rails_helper.rb` of its own — a Discourse plugin
+isn't a standalone app, it only runs loaded into a full copy of Discourse
+core (see `spec/requests/amanuensis/uploads_api_controller_spec.rb`'s
+`sign_in`, `Fabricate`, `SiteSetting` — none of those exist in this repo).
+So running the RSpec suite, locally or in CI, means having an entire second
+application around to boot it in.
+
+`script/test-local` sets that up with Docker, using the same
+`discourse/discourse_test:slim` image and setup steps as the `plugin-tests`
+CI job (`.github/workflows/ci.yml` → `discourse/.github`'s reusable
+`discourse-plugin.yml` workflow), so a local pass means the same thing a CI
+pass does. It clones `discourse/discourse` core into
+`~/projects/discourse-testenv/core` (override with `DISCOURSE_TESTENV_DIR`)
+and live bind-mounts *this* working directory into the container at
+`plugins/amanuensis` — edits here are visible inside the container
+immediately, no rebuild or re-sync step.
+
+```bash
+script/test-local up      # first run: ~15-30 min, pulls the image, installs gems + JS deps, migrates a test DB
+script/test-local test    # bin/rspec plugins/amanuensis/spec
+script/test-local test plugins/amanuensis/spec/requests/amanuensis/uploads_api_controller_spec.rb
+script/test-local down    # stop and remove the container
+```
+
+`up` is idempotent and safe to re-run: gems (`vendor/bundle`) and JS
+deps (`node_modules`) live inside the mounted core checkout on disk, so they
+survive `down`/`up` and only reinstall if missing. Only Postgres and Redis
+live inside the container itself, so those (and the migrated schema) get
+recreated — a few seconds — on every `up`.
+
+Needs Docker running and roughly 3-4 GB of free disk for the image, core
+checkout, gems, and JS deps combined.
+
 ## License
 
 MIT

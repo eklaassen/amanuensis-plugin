@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/v1/plugin/meetings",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/meetings/:meeting_id",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/pipeline/active",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/stages/:stage/runs",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/stages/:stage/runs/:run_id",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/uploads",
+      "credential": "adminSecret",
+      "request": {
+        "type": "object",
+        "required": [
+          "filename",
+          "size_bytes",
+          "title",
+          "recorded_at"
+        ],
+        "properties": {
+          "filename": {
+            "minLength": 1,
+            "maxLength": 255,
+            "type": "string"
+          },
+          "size_bytes": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "recorded_at": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "content_type": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/uploads/:upload_id/complete",
+      "credential": "adminSecret",
+      "request": {
+        "type": "object",
+        "required": [
+          "title",
+          "recorded_at",
+          "filename"
+        ],
+        "properties": {
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "recorded_at": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "filename": {
+            "minLength": 1,
+            "maxLength": 255,
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/meetings/:meeting_id/speaker-access-token",
+      "credential": "adminSecret"
+    }
+  ]
+}
