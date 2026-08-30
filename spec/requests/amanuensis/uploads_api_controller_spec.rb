@@ -366,4 +366,44 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
       expect(a_request(:post, /amanuensis\.example\.com/)).not_to have_been_made
     end
   end
+
+  describe "CSRF protection" do
+    # allow_forgery_protection is off by default in the test env (Rails' own
+    # default, not something this plugin controls) -- request specs never
+    # exercise verify_authenticity_token unless something turns it back on.
+    # This is that: proof ApiController's protect_from_forgery with:
+    # :exception (api_controller.rb) is actually live, not just declared.
+    around do |example|
+      original = ActionController::Base.allow_forgery_protection
+      ActionController::Base.allow_forgery_protection = true
+      begin
+        example.run
+      ensure
+        ActionController::Base.allow_forgery_protection = original
+      end
+    end
+
+    before do
+      group.add(user)
+      sign_in(user)
+    end
+
+    # protect_from_forgery with: :exception raises
+    # ActionController::InvalidAuthenticityToken on a missing/bad token,
+    # which Discourse's own exception handling renders as 422 -- confirmed
+    # against the real app rather than assumed. (application_controller.rb's
+    # handle_unverified_request is for the :null_session/:reset_session
+    # forms, not :exception, so it never actually fires on this path.)
+    it "refuses a POST /uploads with no X-CSRF-Token" do
+      post "/amanuensis/api/uploads", params: valid_payload
+
+      expect(response.status).to eq(422)
+    end
+
+    it "refuses a POST /uploads/:id/complete with no X-CSRF-Token" do
+      post "/amanuensis/api/uploads/upl_1/complete", params: valid_payload
+
+      expect(response.status).to eq(422)
+    end
+  end
 end

@@ -9,9 +9,15 @@ set -euo pipefail
 # for why this needs a full Discourse core checkout at all.
 #
 # Usage:
-#   script/test-local up                    # (re)build the environment
-#   script/test-local test [spec/path]      # run specs (default: the whole suite)
-#   script/test-local down                  # tear down the container
+#   script/test-local up [--browsers]               # (re)build the environment
+#   script/test-local test [--browsers] [spec/path]  # run specs (default: the whole suite)
+#   script/test-local down [--browsers]              # tear down the container
+#
+# --browsers uses discourse_test:slim-browsers (Chromium/Playwright bundled)
+# in a separate container, for spec/system/**/*.rb -- matches CI's own
+# backend_tests/system_tests split (discourse-plugin.yml), which uses
+# different images for the same reason. The plain container has no browser
+# in it at all, so a system spec can't run there.
 #
 # The plugin directory is live bind-mounted, not copied/cloned -- edits here
 # show up inside the container immediately, no sync step. Gems and JS deps
@@ -22,8 +28,27 @@ set -euo pipefail
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TESTENV_DIR="${DISCOURSE_TESTENV_DIR:-$HOME/projects/discourse-testenv}"
 CORE_DIR="$TESTENV_DIR/core"
-CONTAINER_NAME="amanuensis-plugin-test"
-IMAGE="discourse/discourse_test:slim"
+
+# --browsers can appear anywhere in the args; strip it out and remember it,
+# leaving the rest (subcommand + spec path) untouched.
+BROWSERS=""
+ARGS=()
+for arg in "$@"; do
+  if [ "$arg" = "--browsers" ]; then
+    BROWSERS="1"
+  else
+    ARGS+=("$arg")
+  fi
+done
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
+if [ -n "$BROWSERS" ]; then
+  CONTAINER_NAME="amanuensis-plugin-test-browsers"
+  IMAGE="discourse/discourse_test:slim-browsers"
+else
+  CONTAINER_NAME="amanuensis-plugin-test"
+  IMAGE="discourse/discourse_test:slim"
+fi
 
 up() {
   if [ ! -d "$CORE_DIR" ]; then
@@ -81,21 +106,48 @@ up() {
   echo "==> db:create + db:migrate..."
   docker exec "$CONTAINER_NAME" bash -c "bin/rake db:create db:migrate"
 
-  echo "==> Ready. Run: script/test-local test"
+  if [ -n "$BROWSERS" ]; then
+    echo "==> Installing Chromium for Playwright (skipped if already present -- this lives in the container's own filesystem, not the host-mounted core checkout, so it does NOT survive down/up the way gems and JS deps do)..."
+    docker exec "$CONTAINER_NAME" bash -c '
+      if [ ! -d /root/.cache/ms-playwright ] || [ -z "$(ls -A /root/.cache/ms-playwright 2>/dev/null)" ]; then
+        pnpm playwright install --with-deps --no-shell chromium
+      else
+        echo "/root/.cache/ms-playwright already populated, skipping"
+      fi
+    '
+  fi
+
+  echo "==> Ready. Run: script/test-local test$([ -n "$BROWSERS" ] && echo ' --browsers')"
 }
 
 run_tests() {
   if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
-    echo "Container not running -- run 'script/test-local up' first." >&2
+    echo "Container not running -- run 'script/test-local up$([ -n "$BROWSERS" ] && echo " --browsers")' first." >&2
     exit 1
   fi
   local target="${1:-plugins/amanuensis/spec}"
+  # Without --browsers, this container has no Chromium at all (see `up`), so
+  # the default whole-suite run excludes spec/system by RSpec's own tag
+  # metadata (Discourse's rails_helper infers type: :system from file
+  # location for every spec under spec/system/, so --tag ~type:system
+  # excludes exactly that regardless of what other spec/ subdirectories
+  # exist or get added later) -- matches CI's own backend_tests/
+  # system_tests split, which excludes it the same way for the same reason.
+  # (--exclude-pattern looked like the more obvious way to do this, but
+  # plain bin/rspec doesn't actually honor it against an explicit directory
+  # argument the way CI's bin/turbo_rspec does -- confirmed directly, not
+  # assumed.) An explicit path argument is trusted as intentional and gets
+  # no tag filter -- pointing it at something inside spec/system still runs.
+  local tag_flag=""
+  if [ -z "$BROWSERS" ] && [ -z "${1:-}" ]; then
+    tag_flag="--tag ~type:system"
+  fi
   # -t only if stdout is actually a terminal -- `docker exec -it` errors
   # ("the input device is not a TTY") when run from a script, CI, or a
   # non-interactive agent shell.
   local tty_flag=""
   [ -t 1 ] && tty_flag="-t"
-  docker exec $tty_flag "$CONTAINER_NAME" bash -c "bin/rspec '$target' --format documentation"
+  docker exec $tty_flag "$CONTAINER_NAME" bash -c "bin/rspec '$target' $tag_flag --format documentation"
 }
 
 down() {
@@ -111,7 +163,7 @@ case "${1:-}" in
     ;;
   down) down ;;
   *)
-    echo "Usage: $0 {up|test [spec/path]|down}" >&2
+    echo "Usage: $0 {up|test [spec/path]|down} [--browsers]" >&2
     exit 1
     ;;
 esac
