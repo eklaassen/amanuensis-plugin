@@ -65,7 +65,7 @@ immediately, no rebuild or re-sync step.
 
 ```bash
 script/test-local up      # first run: ~15-30 min, pulls the image, installs gems + JS deps, migrates a test DB
-script/test-local test    # bin/rspec plugins/amanuensis/spec
+script/test-local test    # bin/rspec, everything except spec/system (see below)
 script/test-local test plugins/amanuensis/spec/requests/amanuensis/uploads_api_controller_spec.rb
 script/test-local down    # stop and remove the container
 ```
@@ -78,6 +78,28 @@ recreated — a few seconds — on every `up`.
 
 Needs Docker running and roughly 3-4 GB of free disk for the image, core
 checkout, gems, and JS deps combined.
+
+#### System specs (`spec/system/**`)
+
+These drive a real browser and need Chromium, which the plain container
+above doesn't have — add `--browsers` to every subcommand to use
+`discourse_test:slim-browsers` instead, in its own separate container
+(`up --browsers` installs Chromium the first time; that install lives in
+the container's own filesystem, not the mounted core checkout, so unlike
+gems/JS deps it does *not* survive `down --browsers` + `up --browsers`):
+
+```bash
+script/test-local up --browsers
+script/test-local test --browsers                                    # everything, including spec/system
+script/test-local test --browsers plugins/amanuensis/spec/system/amanuensis_upload_spec.rb
+script/test-local down --browsers
+```
+
+The plain (non-`--browsers`) `test` command explicitly excludes
+`spec/system` from its default whole-suite run — that container has no
+browser to run them in at all — matching CI's own `backend_tests`/
+`system_tests` split in `discourse-plugin.yml`, which excludes it there for
+the same reason.
 
 ## License
 
