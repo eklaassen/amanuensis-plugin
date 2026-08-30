@@ -89,7 +89,12 @@ module Amanuensis
                content_type: result.body["content_type"],
              }
     rescue UploadPolicy::Rejected => e
-      render json: { errors: [e.message] }, status: :unprocessable_content
+      # Not :unprocessable_content -- Discourse core still pins rack (2.2.x),
+      # whose SYMBOL_TO_STATUS_CODE table only knows :unprocessable_entity for
+      # 422 (see discourse/discourse's Gemfile.lock). rubocop-discourse's
+      # Rails/HttpStatus cop only rewrites raw integer status codes, so it
+      # won't flip this back.
+      render json: { errors: [e.message] }, status: :unprocessable_entity
     end
 
     def complete
@@ -118,7 +123,12 @@ module Amanuensis
       release_ownership(upload_id)
       render json: { meeting_id: result.body["meeting_id"] }
     rescue UploadPolicy::Rejected => e
-      render json: { errors: [e.message] }, status: :unprocessable_content
+      # Not :unprocessable_content -- Discourse core still pins rack (2.2.x),
+      # whose SYMBOL_TO_STATUS_CODE table only knows :unprocessable_entity for
+      # 422 (see discourse/discourse's Gemfile.lock). rubocop-discourse's
+      # Rails/HttpStatus cop only rewrites raw integer status codes, so it
+      # won't flip this back.
+      render json: { errors: [e.message] }, status: :unprocessable_entity
     end
 
     private
