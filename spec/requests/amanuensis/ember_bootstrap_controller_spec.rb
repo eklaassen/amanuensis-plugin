@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Amanuensis::EmberBootstrapController, type: :request do
   before { SiteSetting.amanuensis_enabled = true }
@@ -37,16 +37,16 @@ RSpec.describe Amanuensis::EmberBootstrapController, type: :request do
       # gem, which this Discourse test harness doesn't bundle) -- main-outlet
       # is what Ember mounts into, so its presence is direct evidence the
       # real app shell booted rather than a 404 or the old plain-HTML page.
-      expect(response.body).to include('main-outlet')
+      expect(response.body).to include("main-outlet")
     end
   end
 
-  it 'renders the shell for a signed-in user with no special access too' do
+  it "renders the shell for a signed-in user with no special access too" do
     sign_in(Fabricate(:user))
 
-    get '/amanuensis/outcomes'
+    get "/amanuensis/outcomes"
 
     expect(response.status).to eq(200)
-    expect(response.body).to include('main-outlet')
+    expect(response.body).to include("main-outlet")
   end
 end

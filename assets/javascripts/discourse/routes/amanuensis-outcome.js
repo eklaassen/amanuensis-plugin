@@ -1,6 +1,6 @@
 import { service } from "@ember/service";
-import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import DiscourseRoute from "discourse/routes/discourse";
 import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisOutcomeRoute extends DiscourseRoute {
@@ -17,8 +17,8 @@ export default class AmanuensisOutcomeRoute extends DiscourseRoute {
   }
 
   model(params) {
-    return ajax(`/amanuensis/api/outcomes/${params.meeting_id}`).catch((error) =>
-      modelErrorFrom(error, "Outcome not found.")
+    return ajax(`/amanuensis/api/outcomes/${params.meeting_id}`).catch(
+      (error) => modelErrorFrom(error, "Outcome not found.")
     );
   }
 

@@ -8,9 +8,7 @@ module Amanuensis
   module AccessControl
     extend ActiveSupport::Concern
 
-    included do
-      before_action :ensure_plugin_enabled
-    end
+    included { before_action :ensure_plugin_enabled }
 
     private
 

@@ -15,31 +15,29 @@ module Amanuensis
   module Formatting
     extend ActiveSupport::Concern
 
-    included do
-      helper_method :format_duration, :format_duration_ms, :humanize_stage
-    end
+    included { helper_method :format_duration, :format_duration_ms, :humanize_stage }
 
     private
 
     def format_duration(seconds)
-      return '' if seconds.nil?
+      return "" if seconds.nil?
 
       hrs = seconds / 3600
       mins = (seconds % 3600) / 60
       secs = seconds % 60
 
       if hrs > 0
-        format('%dh %dm', hrs, mins)
+        format("%dh %dm", hrs, mins)
       elsif mins > 0
-        format('%dm %ds', mins, secs)
+        format("%dm %ds", mins, secs)
       else
-        format('%ds', secs)
+        format("%ds", secs)
       end
     end
 
     # stage_runs.duration_ms is milliseconds; format_duration takes seconds.
     def format_duration_ms(ms)
-      return '' if ms.nil?
+      return "" if ms.nil?
 
       format_duration(ms / 1000)
     end
@@ -54,15 +52,15 @@ module Amanuensis
     # and MeetingsApiController (a meeting's full pipeline timeline). Same
     # upstream record shape in both places, so one serializer.
     def timeline_run(run)
-      attempt = run['attempt'].to_i
+      attempt = run["attempt"].to_i
       {
-        stage_label: humanize_stage(run['stage']),
-        outcome: run['outcome'],
-        started_at: run['started_at'],
-        duration: run['duration_ms'] ? format_duration_ms(run['duration_ms']) : nil,
+        stage_label: humanize_stage(run["stage"]),
+        outcome: run["outcome"],
+        started_at: run["started_at"],
+        duration: run["duration_ms"] ? format_duration_ms(run["duration_ms"]) : nil,
         attempt_note: attempt > 1 ? "attempt #{attempt}" : nil,
-        failure_reason: run['failure_reason'],
-        inferred: run['inferred']
+        failure_reason: run["failure_reason"],
+        inferred: run["inferred"],
       }
     end
   end

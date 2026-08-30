@@ -6,11 +6,17 @@
 // same as core pages like /badges.
 export default function () {
   this.route("amanuensis-meetings", { path: "/amanuensis/meetings" });
-  this.route("amanuensis-meeting", { path: "/amanuensis/meetings/:meeting_id" });
+  this.route("amanuensis-meeting", {
+    path: "/amanuensis/meetings/:meeting_id",
+  });
   this.route("amanuensis-pipeline", { path: "/amanuensis/pipeline" });
   this.route("amanuensis-stage-runs", { path: "/amanuensis/stages/:stage" });
-  this.route("amanuensis-stage-run", { path: "/amanuensis/stages/:stage/runs/:run_id" });
+  this.route("amanuensis-stage-run", {
+    path: "/amanuensis/stages/:stage/runs/:run_id",
+  });
   this.route("amanuensis-outcomes", { path: "/amanuensis/outcomes" });
-  this.route("amanuensis-outcome", { path: "/amanuensis/outcomes/:meeting_id" });
+  this.route("amanuensis-outcome", {
+    path: "/amanuensis/outcomes/:meeting_id",
+  });
   this.route("amanuensis-upload-new", { path: "/amanuensis/uploads/new" });
 }

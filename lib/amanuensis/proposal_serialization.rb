@@ -13,40 +13,45 @@ module Amanuensis
     private
 
     def serialize_proposal(proposal)
-      items = proposal['items'] || []
+      items = proposal["items"] || []
 
-      groups = PROPOSAL_DECISIONS.filter_map do |decision|
-        decision_items = items.select { |i| i['decision'] == decision }
-        next if decision_items.empty?
+      groups =
+        PROPOSAL_DECISIONS.filter_map do |decision|
+          decision_items = items.select { |i| i["decision"] == decision }
+          next if decision_items.empty?
 
-        {
-          decision: decision,
-          decision_label: decision.capitalize,
-          count: decision_items.length,
-          items: decision_items.map { |i| serialize_proposal_item(i, show_edited: decision == 'edited') }
-        }
-      end
+          {
+            decision: decision,
+            decision_label: decision.capitalize,
+            count: decision_items.length,
+            items:
+              decision_items.map do |i|
+                serialize_proposal_item(i, show_edited: decision == "edited")
+              end,
+          }
+        end
 
-      { state: proposal['state'], groups: groups }
+      { state: proposal["state"], groups: groups }
     end
 
     def serialize_proposal_item(item, show_edited:)
       {
-        operation: item['operation'],
-        target_type: item['target_type'],
-        target_field: item['target_field'],
-        proposed_value: item['proposed_value'] ? format_value(item['proposed_value']) : nil,
-        edited_value: show_edited && item['edited_value'] ? format_value(item['edited_value']) : nil,
-        show_edited: show_edited
+        operation: item["operation"],
+        target_type: item["target_type"],
+        target_field: item["target_field"],
+        proposed_value: item["proposed_value"] ? format_value(item["proposed_value"]) : nil,
+        edited_value:
+          show_edited && item["edited_value"] ? format_value(item["edited_value"]) : nil,
+        show_edited: show_edited,
       }
     end
 
     def serialize_history_entry(entry)
       {
-        created_at: entry['created_at'],
-        source: entry['source'],
-        actor: entry['actor'],
-        summary: entry['summary']
+        created_at: entry["created_at"],
+        source: entry["source"],
+        actor: entry["actor"],
+        summary: entry["summary"],
       }
     end
 
@@ -55,7 +60,7 @@ module Amanuensis
       when Hash, Array
         value.to_json
       when nil
-        '—'
+        "—"
       else
         value.to_s
       end

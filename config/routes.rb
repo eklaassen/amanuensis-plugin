@@ -9,31 +9,29 @@ Amanuensis::Engine.routes.draw do
   # (Discourse core's only catch-all is permalink-constrained, not a
   # generic SPA fallback). See EmberBootstrapController for how that boot
   # happens.
-  get '/' => 'ember_bootstrap#show'
-  get '/meetings' => 'ember_bootstrap#show'
-  get '/meetings/:id' => 'ember_bootstrap#show'
-  get '/pipeline' => 'ember_bootstrap#show'
-  get '/stages/:stage' => 'ember_bootstrap#show'
-  get '/stages/:stage/runs/:run_id' => 'ember_bootstrap#show'
-  get '/outcomes' => 'ember_bootstrap#show'
-  get '/outcomes/:id' => 'ember_bootstrap#show'
-  get '/uploads/new' => 'ember_bootstrap#show'
+  get "/" => "ember_bootstrap#show"
+  get "/meetings" => "ember_bootstrap#show"
+  get "/meetings/:id" => "ember_bootstrap#show"
+  get "/pipeline" => "ember_bootstrap#show"
+  get "/stages/:stage" => "ember_bootstrap#show"
+  get "/stages/:stage/runs/:run_id" => "ember_bootstrap#show"
+  get "/outcomes" => "ember_bootstrap#show"
+  get "/outcomes/:id" => "ember_bootstrap#show"
+  get "/uploads/new" => "ember_bootstrap#show"
 
-  scope '/api', defaults: { format: :json } do
-    get '/meetings' => 'meetings_api#index'
-    get '/meetings/:id' => 'meetings_api#show'
-    post '/meetings/:id/speaker-access' => 'meetings_api#speaker_access'
-    get '/pipeline' => 'pipeline_api#active'
-    get '/stages/:stage/runs' => 'stages_api#show'
-    get '/stages/:stage/runs/:run_id' => 'stages_api#run'
-    get '/outcomes' => 'outcomes_api#index'
-    get '/outcomes/:id' => 'outcomes_api#show'
-    get '/uploads/config' => 'uploads_api#upload_config'
-    post '/uploads' => 'uploads_api#create'
-    post '/uploads/:upload_id/complete' => 'uploads_api#complete'
+  scope "/api", defaults: { format: :json } do
+    get "/meetings" => "meetings_api#index"
+    get "/meetings/:id" => "meetings_api#show"
+    post "/meetings/:id/speaker-access" => "meetings_api#speaker_access"
+    get "/pipeline" => "pipeline_api#active"
+    get "/stages/:stage/runs" => "stages_api#show"
+    get "/stages/:stage/runs/:run_id" => "stages_api#run"
+    get "/outcomes" => "outcomes_api#index"
+    get "/outcomes/:id" => "outcomes_api#show"
+    get "/uploads/config" => "uploads_api#upload_config"
+    post "/uploads" => "uploads_api#create"
+    post "/uploads/:upload_id/complete" => "uploads_api#complete"
   end
 end
 
-Discourse::Application.routes.draw do
-  mount ::Amanuensis::Engine, at: '/amanuensis'
-end
+Discourse::Application.routes.draw { mount ::Amanuensis::Engine, at: "/amanuensis" }

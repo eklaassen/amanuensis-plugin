@@ -1,18 +1,26 @@
 import { on } from "@ember/modifier";
+import { trustHTML } from "@ember/template";
+
+function progressBarStyle(percent) {
+  return trustHTML(`width: ${percent}%`);
+}
 
 export default <template>
   <div class="amanuensis-container">
     <h1 class="amanuensis-page-title">Upload a recording</h1>
     <p class="amanuensis-hint">
-      The file goes straight to storage from your browser, then enters the pipeline
-      for transcription. Allowed:
-      {{@controller.allowedExtensionsHint}}.
-      Maximum
+      The file goes straight to storage from your browser, then enters the
+      pipeline for transcription. Allowed:
+      {{@controller.allowedExtensionsHint}}. Maximum
       {{@controller.maxMb}}
       MB.
     </p>
 
-    <form class="amanuensis-upload-form" autocomplete="off" {{on "submit" @controller.submit}}>
+    <form
+      class="amanuensis-upload-form"
+      autocomplete="off"
+      {{on "submit" @controller.submit}}
+    >
       <label class="amanuensis-field">
         <span class="amanuensis-field-label">Title</span>
         <input
@@ -47,20 +55,29 @@ export default <template>
         />
       </label>
 
-      <button type="submit" class="amanuensis-button" disabled={{@controller.busy}}>Upload</button>
+      <button
+        type="submit"
+        class="amanuensis-button"
+        disabled={{@controller.busy}}
+      >Upload</button>
     </form>
 
     {{#if @controller.busy}}
       <div class="amanuensis-upload-progress">
         <div class="amanuensis-progress-track">
-          <div class="amanuensis-progress-bar" style="width: {{@controller.progressPercent}}%"></div>
+          <div
+            class="amanuensis-progress-bar"
+            style={{progressBarStyle @controller.progressPercent}}
+          ></div>
         </div>
         <p class="amanuensis-hint">{{@controller.progressLabel}}</p>
       </div>
     {{/if}}
 
     {{#if @controller.message}}
-      <div class="amanuensis-upload-message amanuensis-upload-message-{{@controller.messageKind}}">{{@controller.message}}</div>
+      <div
+        class="amanuensis-upload-message amanuensis-upload-message-{{@controller.messageKind}}"
+      >{{@controller.message}}</div>
     {{/if}}
   </div>
 </template>

@@ -1,7 +1,7 @@
-import Controller from "@ember/controller";
-import { service } from "@ember/service";
 import { tracked } from "@glimmer/tracking";
+import Controller from "@ember/controller";
 import { action } from "@ember/object";
+import { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import { extractError } from "discourse/lib/ajax-error";
 
@@ -13,6 +13,10 @@ import { extractError } from "discourse/lib/ajax-error";
 // ensure_relabel_speakers check on MeetingsApiController#speaker_access is
 // what actually enforces it.
 export default class AmanuensisMeetingController extends Controller {
+  // Not referenced in this file, but the co-located template reads it via
+  // @controller.currentUser.can_relabel_speakers_amanuensis -- the lint rule
+  // can't see across the controller/template split.
+  // eslint-disable-next-line discourse/no-unused-services
   @service currentUser;
 
   @tracked relabelBusy = false;
@@ -37,9 +41,12 @@ export default class AmanuensisMeetingController extends Controller {
     const tab = window.open("about:blank", "_blank");
 
     try {
-      const result = await ajax(`/amanuensis/api/meetings/${this.model.meeting.id}/speaker-access`, {
-        type: "POST",
-      });
+      const result = await ajax(
+        `/amanuensis/api/meetings/${this.model.meeting.id}/speaker-access`,
+        {
+          type: "POST",
+        }
+      );
 
       // Amanuensis validates this server-side (MeetingsApiController#speaker_access
       // rejects anything that isn't a plain http(s) url before it ever reaches
@@ -63,11 +70,15 @@ export default class AmanuensisMeetingController extends Controller {
       } else {
         // The synchronous open above was itself blocked -- rare, but
         // possible under an aggressive popup blocker.
-        this.relabelError = "Could not open the relabel page. Allow pop-ups for this site and try again.";
+        this.relabelError =
+          "Could not open the relabel page. Allow pop-ups for this site and try again.";
       }
     } catch (error) {
       tab?.close();
-      this.relabelError = extractError(error, "Could not open the relabel page.");
+      this.relabelError = extractError(
+        error,
+        "Could not open the relabel page."
+      );
     } finally {
       this.relabelBusy = false;
     }

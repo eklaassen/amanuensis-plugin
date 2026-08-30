@@ -11,11 +11,12 @@ module Amanuensis
   # of thing that gets flipped by accident. Making the two credentials come
   # from two differently-named entry points removes that failure mode.
   class ApiClient
-    Result = Struct.new(:status, :body, :error) do
-      def ok?
-        error.nil? && status.to_i.between?(200, 299)
+    Result =
+      Struct.new(:status, :body, :error) do
+        def ok?
+          error.nil? && status.to_i.between?(200, 299)
+        end
       end
-    end
 
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 15
@@ -31,14 +32,14 @@ module Amanuensis
       Errno::EHOSTUNREACH,
       OpenSSL::SSL::SSLError,
       SocketError,
-      EOFError
+      EOFError,
     ].freeze
 
     HTTP_METHODS = {
       get: Net::HTTP::Get,
       post: Net::HTTP::Post,
       patch: Net::HTTP::Patch,
-      delete: Net::HTTP::Delete
+      delete: Net::HTTP::Delete,
     }.freeze
 
     def self.reader
@@ -81,11 +82,12 @@ module Amanuensis
       uri.query = URI.encode_www_form(query) if query.present?
 
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
+      http.use_ssl = uri.scheme == "https"
       http.open_timeout = OPEN_TIMEOUT
       http.read_timeout = READ_TIMEOUT
 
-      response = http.request(build_request(verb, uri, body: body, idempotency_key: idempotency_key))
+      response =
+        http.request(build_request(verb, uri, body: body, idempotency_key: idempotency_key))
       status = response.code.to_i
       parsed, parse_failed = parse_body(response.body)
 
@@ -96,34 +98,36 @@ module Amanuensis
       # unparseable body is expected -- callers build their message from the
       # status instead.
       if parse_failed && status.between?(200, 299)
-        return Result.new(status, nil, "Malformed JSON in Amanuensis API response (status #{status})")
+        return(
+          Result.new(status, nil, "Malformed JSON in Amanuensis API response (status #{status})")
+        )
       end
 
       Result.new(status, parsed, nil)
     rescue *RESCUED_ERRORS => e
       Result.new(nil, nil, "Could not reach Amanuensis API: #{e.message}")
     rescue URI::InvalidURIError
-      Result.new(nil, nil, 'Invalid Amanuensis API URL configured.')
+      Result.new(nil, nil, "Invalid Amanuensis API URL configured.")
     end
 
     def build_request(verb, uri, body:, idempotency_key:)
       request = HTTP_METHODS.fetch(verb).new(uri)
-      request['Authorization'] = "Bearer #{@secret}"
-      request['Accept'] = 'application/json'
+      request["Authorization"] = "Bearer #{@secret}"
+      request["Accept"] = "application/json"
 
       if body
-        request['Content-Type'] = 'application/json'
+        request["Content-Type"] = "application/json"
         request.body = body.to_json
       end
 
-      request['Idempotency-Key'] = idempotency_key if idempotency_key.present?
+      request["Idempotency-Key"] = idempotency_key if idempotency_key.present?
       request
     end
 
     # Returns [parsed_body, parse_failed]. A blank body is not a failure --
     # 204s and empty DELETE responses are legitimate.
     def parse_body(raw)
-      return [nil, false] if raw.blank?
+      return nil, false if raw.blank?
 
       [JSON.parse(raw), false]
     rescue JSON::ParserError
@@ -131,7 +135,7 @@ module Amanuensis
     end
 
     def not_configured_result
-      Result.new(nil, nil, 'Amanuensis API is not configured (missing base URL or credential).')
+      Result.new(nil, nil, "Amanuensis API is not configured (missing base URL or credential).")
     end
   end
 end

@@ -1,6 +1,6 @@
 import { service } from "@ember/service";
-import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import DiscourseRoute from "discourse/routes/discourse";
 import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisOutcomesRoute extends DiscourseRoute {

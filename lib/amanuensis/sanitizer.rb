@@ -11,12 +11,12 @@ module Amanuensis
 
     class << self
       def sanitize_summary(html)
-        return '' if html.blank?
+        return "" if html.blank?
 
         ActionController::Base.helpers.sanitize(
           html,
           tags: ALLOWED_TAGS,
-          attributes: ALLOWED_ATTRIBUTES
+          attributes: ALLOWED_ATTRIBUTES,
         )
       end
     end

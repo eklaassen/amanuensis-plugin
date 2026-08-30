@@ -77,6 +77,3 @@ jobs:
     uses: discourse/.github/.github/workflows/discourse-plugin.yml@v1
     with:
       name: amanuensis
-      # This repo has no Gemfile yet, so the reusable linting job (which runs
-      # `bundle install` + rubocop) can't run. Wire up linting separately.
-      skip_linting: true
