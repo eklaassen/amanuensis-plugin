@@ -1,5 +1,5 @@
-import { LinkTo } from "@ember/routing";
 import { array, hash } from "@ember/helper";
+import { LinkTo } from "@ember/routing";
 import { eq } from "discourse/truth-helpers";
 import AmanuensisBadge from "../components/amanuensis-badge";
 import AmanuensisEmpty from "../components/amanuensis-empty";
@@ -17,7 +17,11 @@ export default <template>
         <LinkTo
           @route="amanuensis-stage-runs"
           @model={{stageOption.value}}
-          class="amanuensis-chip {{if (eq stageOption.value @controller.model.stage) 'amanuensis-chip-active'}}"
+          class="amanuensis-chip
+            {{if
+              (eq stageOption.value @controller.model.stage)
+              'amanuensis-chip-active'
+            }}"
         >{{stageOption.label}}</LinkTo>
       {{/each}}
     </div>
@@ -27,14 +31,19 @@ export default <template>
         @route="amanuensis-stage-runs"
         @model={{@controller.model.stage}}
         @query={{hash outcome=null before=null}}
-        class="amanuensis-chip {{unless @controller.outcome 'amanuensis-chip-active'}}"
+        class="amanuensis-chip
+          {{unless @controller.outcome 'amanuensis-chip-active'}}"
       >All</LinkTo>
       {{#each @controller.outcomeFilters as |filter|}}
         <LinkTo
           @route="amanuensis-stage-runs"
           @model={{@controller.model.stage}}
           @query={{hash outcome=filter.value before=null}}
-          class="amanuensis-chip {{if (eq filter.value @controller.outcome) 'amanuensis-chip-active'}}"
+          class="amanuensis-chip
+            {{if
+              (eq filter.value @controller.outcome)
+              'amanuensis-chip-active'
+            }}"
         >{{filter.label}}</LinkTo>
       {{/each}}
     </div>
@@ -58,7 +67,10 @@ export default <template>
             {{#each @controller.model.runs as |run|}}
               <tr>
                 <td>
-                  <LinkTo @route="amanuensis-stage-run" @models={{array @controller.model.stage run.id}}>{{run.meeting_title}}</LinkTo>
+                  <LinkTo
+                    @route="amanuensis-stage-run"
+                    @models={{array @controller.model.stage run.id}}
+                  >{{run.meeting_title}}</LinkTo>
                   {{#if run.inferred}}
                     <span class="amanuensis-inferred-tag">reconstructed</span>
                   {{/if}}
@@ -66,7 +78,10 @@ export default <template>
                 <td><AmanuensisLocalTime @timestamp={{run.started_at}} /></td>
                 <td>{{if run.duration run.duration "—"}}</td>
                 <td>{{run.attempt}}</td>
-                <td><AmanuensisBadge @label={{run.outcome}} @variant={{run.outcome}} /></td>
+                <td><AmanuensisBadge
+                    @label={{run.outcome}}
+                    @variant={{run.outcome}}
+                  /></td>
                 <td>{{if run.failure_reason run.failure_reason "—"}}</td>
               </tr>
             {{/each}}
@@ -79,7 +94,10 @@ export default <template>
           <LinkTo
             @route="amanuensis-stage-runs"
             @model={{@controller.model.stage}}
-            @query={{hash outcome=@controller.outcome before=@controller.model.pagination.next_before}}
+            @query={{hash
+              outcome=@controller.outcome
+              before=@controller.model.pagination.next_before
+            }}
             class="amanuensis-pagination-link"
           >&larr; Older</LinkTo>
         {{/if}}

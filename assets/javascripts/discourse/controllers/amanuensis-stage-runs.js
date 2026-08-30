@@ -1,5 +1,5 @@
-import Controller from "@ember/controller";
 import { tracked } from "@glimmer/tracking";
+import Controller from "@ember/controller";
 
 // Not sent from the server: there's no existing Ruby constant for this list
 // either (the old ERB view had it as a literal array too), so there's
@@ -14,11 +14,10 @@ const OUTCOME_FILTERS = [
 ];
 
 export default class AmanuensisStageRunsController extends Controller {
-  queryParams = ["outcome", "before"];
-
   @tracked stage = null;
   @tracked outcome = null;
   @tracked before = null;
+  queryParams = ["outcome", "before"];
 
   outcomeFilters = OUTCOME_FILTERS;
 }

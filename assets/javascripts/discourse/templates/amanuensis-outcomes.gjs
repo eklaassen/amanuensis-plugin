@@ -1,5 +1,5 @@
-import { LinkTo } from "@ember/routing";
 import { hash } from "@ember/helper";
+import { LinkTo } from "@ember/routing";
 import { eq } from "discourse/truth-helpers";
 import AmanuensisBadge from "../components/amanuensis-badge";
 import AmanuensisEmpty from "../components/amanuensis-empty";
@@ -16,12 +16,14 @@ export default <template>
       <LinkTo
         @route="amanuensis-outcomes"
         @query={{hash status="complete" before=null}}
-        class="amanuensis-chip {{if (eq @controller.status "complete") "amanuensis-chip-active"}}"
+        class="amanuensis-chip
+          {{if (eq @controller.status 'complete') 'amanuensis-chip-active'}}"
       >Complete</LinkTo>
       <LinkTo
         @route="amanuensis-outcomes"
         @query={{hash status="failed" before=null}}
-        class="amanuensis-chip {{if (eq @controller.status "failed") "amanuensis-chip-active"}}"
+        class="amanuensis-chip
+          {{if (eq @controller.status 'failed') 'amanuensis-chip-active'}}"
       >Failed</LinkTo>
     </div>
 
@@ -41,10 +43,22 @@ export default <template>
           <tbody>
             {{#each @controller.model.meetings as |meeting|}}
               <tr>
-                <td><LinkTo @route="amanuensis-outcome" @model={{meeting.id}}>{{meeting.title}}</LinkTo></td>
-                <td><AmanuensisLocalTime @timestamp={{meeting.recorded_at}} /></td>
-                <td><AmanuensisBadge @label={{meeting.status}} @variant={{meeting.status}} /></td>
-                <td>{{if meeting.failure_reason meeting.failure_reason "—"}}</td>
+                <td><LinkTo
+                    @route="amanuensis-outcome"
+                    @model={{meeting.id}}
+                  >{{meeting.title}}</LinkTo></td>
+                <td><AmanuensisLocalTime
+                    @timestamp={{meeting.recorded_at}}
+                  /></td>
+                <td><AmanuensisBadge
+                    @label={{meeting.status}}
+                    @variant={{meeting.status}}
+                  /></td>
+                <td>{{if
+                    meeting.failure_reason
+                    meeting.failure_reason
+                    "—"
+                  }}</td>
               </tr>
             {{/each}}
           </tbody>
@@ -55,7 +69,10 @@ export default <template>
         {{#if @controller.model.pagination.has_more}}
           <LinkTo
             @route="amanuensis-outcomes"
-            @query={{hash status=@controller.status before=@controller.model.pagination.next_before}}
+            @query={{hash
+              status=@controller.status
+              before=@controller.model.pagination.next_before
+            }}
             class="amanuensis-pagination-link"
           >&larr; Older</LinkTo>
         {{/if}}

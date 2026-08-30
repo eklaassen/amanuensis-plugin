@@ -1,7 +1,7 @@
 import { service } from "@ember/service";
 import { trustHTML } from "@ember/template";
-import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
+import DiscourseRoute from "discourse/routes/discourse";
 import modelErrorFrom from "../lib/amanuensis-model-error";
 
 export default class AmanuensisMeetingRoute extends DiscourseRoute {

@@ -24,24 +24,29 @@ module Amanuensis
       # produced an outcome yet, whatever its transcription status says.
       # Failed meetings never reach analyze, so they never get a proposal --
       # canon_status doesn't apply to that tab.
-      params_hash[:canon_status] = 'applied' if @status == 'complete'
+      params_hash[:canon_status] = "applied" if @status == "complete"
       params_hash[:before] = params[:before] if params[:before].present?
 
-      result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
+      result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings", params_hash)
 
       if result.ok?
         render json: {
-          status: @status,
-          meetings: result.body['meetings'].map { |m| serialize_meeting(m) },
-          pagination: result.body['pagination']
-        }
+                 status: @status,
+                 meetings: result.body["meetings"].map { |m| serialize_meeting(m) },
+                 pagination: result.body["pagination"],
+               }
       else
         render json: {
-          status: @status,
-          meetings: [],
-          pagination: { 'has_more' => false },
-          error: result.error || "Failed to fetch outcomes (status #{result.status || 'unknown'})"
-        }, status: 502
+                 status: @status,
+                 meetings: [],
+                 pagination: {
+                   "has_more" => false,
+                 },
+                 error:
+                   result.error ||
+                     "Failed to fetch outcomes (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
@@ -55,44 +60,42 @@ module Amanuensis
       if result.ok?
         render json: serialize_outcome_detail(result.body)
       else
-        render json: { error: result.error || "Outcome not found (status #{result.status || 'unknown'})" },
-               status: 502
+        render json: {
+                 error: result.error || "Outcome not found (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
     private
 
     def validate_status
-      @status = params[:status].presence || 'complete'
-      raise Discourse::NotFound unless VALID_STATUSES.include?(@status)
+      @status = params[:status].presence || "complete"
+      raise Discourse::NotFound if VALID_STATUSES.exclude?(@status)
     end
 
     def serialize_outcome_detail(data)
-      meeting = data['meeting']
-      proposal = data['proposal']
+      meeting = data["meeting"]
+      proposal = data["proposal"]
 
       {
         meeting: serialize_meeting_ref(meeting),
-        proposal: proposal && proposal['items'].present? ? serialize_proposal(proposal) : nil,
-        history: (data['history'] || []).map { |h| serialize_history_entry(h) }
+        proposal: proposal && proposal["items"].present? ? serialize_proposal(proposal) : nil,
+        history: (data["history"] || []).map { |h| serialize_history_entry(h) },
       }
     end
 
     def serialize_meeting_ref(meeting)
-      {
-        id: meeting['id'],
-        title: meeting['title'],
-        recorded_at: meeting['recorded_at']
-      }
+      { id: meeting["id"], title: meeting["title"], recorded_at: meeting["recorded_at"] }
     end
 
     def serialize_meeting(meeting)
       {
-        id: meeting['id'],
-        title: meeting['title'],
-        recorded_at: meeting['recorded_at'],
-        status: meeting['status'],
-        failure_reason: meeting['failure_reason']
+        id: meeting["id"],
+        title: meeting["title"],
+        recorded_at: meeting["recorded_at"],
+        status: meeting["status"],
+        failure_reason: meeting["failure_reason"],
       }
     end
   end

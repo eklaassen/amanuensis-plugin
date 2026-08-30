@@ -42,13 +42,18 @@ module Amanuensis
     # instead of the options object it expected.
     def upload_config
       render json: {
-        max_bytes: UploadPolicy::MAX_BYTES,
-        allowed_extensions: UploadPolicy::ALLOWED_EXTENSIONS
-      }
+               max_bytes: UploadPolicy::MAX_BYTES,
+               allowed_extensions: UploadPolicy::ALLOWED_EXTENSIONS,
+             }
     end
 
     def create
-      RateLimiter.new(current_user, 'amanuensis-upload-presign', PRESIGN_LIMIT_PER_HOUR, 1.hour).performed!
+      RateLimiter.new(
+        current_user,
+        "amanuensis-upload-presign",
+        PRESIGN_LIMIT_PER_HOUR,
+        1.hour,
+      ).performed!
 
       filename = UploadPolicy.sanitize_filename(params[:filename])
       UploadPolicy.validate!(filename: filename, size_bytes: params[:size_bytes])
@@ -56,19 +61,20 @@ module Amanuensis
       # Braces are load-bearing: post's signature is (path, body = {},
       # idempotency_key:), so bare `filename:` etc. bind as keyword arguments
       # and raise ArgumentError instead of becoming the body hash.
-      result = ApiClient.admin.post(
-        '/v1/plugin/uploads',
-        {
-          filename: filename,
-          size_bytes: params[:size_bytes].to_i,
-          title: upload_title,
-          recorded_at: recorded_at
-        }
-      )
+      result =
+        ApiClient.admin.post(
+          "/v1/plugin/uploads",
+          {
+            filename: filename,
+            size_bytes: params[:size_bytes].to_i,
+            title: upload_title,
+            recorded_at: recorded_at,
+          },
+        )
 
       return render_upstream_error(result) unless result.ok?
 
-      upload_id = result.body['upload_id']
+      upload_id = result.body["upload_id"]
       claim_ownership(upload_id)
 
       # content_type is passed through because the browser has to echo it as
@@ -78,16 +84,26 @@ module Amanuensis
       # upload_url is a bearer credential -- it goes back in the XHR body and
       # nowhere else (no href, no attribute, nothing that leaks via Referer).
       render json: {
-        upload_id: upload_id,
-        upload_url: result.body['upload_url'],
-        content_type: result.body['content_type']
-      }
+               upload_id: upload_id,
+               upload_url: result.body["upload_url"],
+               content_type: result.body["content_type"],
+             }
     rescue UploadPolicy::Rejected => e
-      render json: { errors: [e.message] }, status: 422
+      # Not :unprocessable_content -- Discourse core still pins rack (2.2.x),
+      # whose SYMBOL_TO_STATUS_CODE table only knows :unprocessable_entity for
+      # 422 (see discourse/discourse's Gemfile.lock). rubocop-discourse's
+      # Rails/HttpStatus cop only rewrites raw integer status codes, so it
+      # won't flip this back.
+      render json: { errors: [e.message] }, status: :unprocessable_entity
     end
 
     def complete
-      RateLimiter.new(current_user, 'amanuensis-upload-complete', COMPLETE_LIMIT_PER_HOUR, 1.hour).performed!
+      RateLimiter.new(
+        current_user,
+        "amanuensis-upload-complete",
+        COMPLETE_LIMIT_PER_HOUR,
+        1.hour,
+      ).performed!
 
       upload_id = params[:upload_id].to_s
       raise Discourse::InvalidAccess unless upload_id.match?(UPLOAD_ID_FORMAT)
@@ -96,27 +112,29 @@ module Amanuensis
       filename = UploadPolicy.sanitize_filename(params[:filename])
       UploadPolicy.validate!(filename: filename, size_bytes: params[:size_bytes])
 
-      result = ApiClient.admin.post(
-        "/v1/plugin/uploads/#{upload_id}/complete",
-        {
-          filename: filename,
-          title: upload_title,
-          recorded_at: recorded_at
-        }
-      )
+      result =
+        ApiClient.admin.post(
+          "/v1/plugin/uploads/#{upload_id}/complete",
+          { filename: filename, title: upload_title, recorded_at: recorded_at },
+        )
 
       return render_upstream_error(result) unless result.ok?
 
       release_ownership(upload_id)
-      render json: { meeting_id: result.body['meeting_id'] }
+      render json: { meeting_id: result.body["meeting_id"] }
     rescue UploadPolicy::Rejected => e
-      render json: { errors: [e.message] }, status: 422
+      # Not :unprocessable_content -- Discourse core still pins rack (2.2.x),
+      # whose SYMBOL_TO_STATUS_CODE table only knows :unprocessable_entity for
+      # 422 (see discourse/discourse's Gemfile.lock). rubocop-discourse's
+      # Rails/HttpStatus cop only rewrites raw integer status codes, so it
+      # won't flip this back.
+      render json: { errors: [e.message] }, status: :unprocessable_entity
     end
 
     private
 
     def upload_title
-      params[:title].presence || I18n.t('amanuensis.uploads.default_title')
+      params[:title].presence || I18n.t("amanuensis.uploads.default_title")
     end
 
     def recorded_at
@@ -150,9 +168,10 @@ module Amanuensis
     end
 
     def render_upstream_error(result)
-      message = result.error.presence || I18n.t('amanuensis.uploads.errors.upstream',
-                                                status: result.status || 'unknown')
-      render json: { errors: [message] }, status: 502
+      message =
+        result.error.presence ||
+          I18n.t("amanuensis.uploads.errors.upstream", status: result.status || "unknown")
+      render json: { errors: [message] }, status: :bad_gateway
     end
   end
 end

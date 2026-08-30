@@ -11,7 +11,10 @@ export default <template>
           <div class="amanuensis-timeline-content">
             <div class="amanuensis-timeline-header">
               <AmanuensisBadge @label={{run.stage_label}} @variant="source" />
-              <AmanuensisBadge @label={{run.outcome}} @variant={{run.outcome}} />
+              <AmanuensisBadge
+                @label={{run.outcome}}
+                @variant={{run.outcome}}
+              />
               {{#if run.inferred}}
                 <span class="amanuensis-inferred-tag">reconstructed</span>
               {{/if}}
@@ -28,7 +31,9 @@ export default <template>
               {{/if}}
             </div>
             {{#if run.failure_reason}}
-              <div class="amanuensis-timeline-error">{{run.failure_reason}}</div>
+              <div
+                class="amanuensis-timeline-error"
+              >{{run.failure_reason}}</div>
             {{/if}}
           </div>
         </div>

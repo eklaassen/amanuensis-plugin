@@ -38,7 +38,10 @@ export default class AmanuensisLocalTime extends Component {
 
   <template>
     {{#if this.displayValue}}
-      <span class="amanuensis-local-time" title={{@timestamp}}>{{this.displayValue}}</span>
+      <span
+        class="amanuensis-local-time"
+        title={{@timestamp}}
+      >{{this.displayValue}}</span>
     {{else}}
       <span class="amanuensis-local-time amanuensis-local-time--empty">—</span>
     {{/if}}

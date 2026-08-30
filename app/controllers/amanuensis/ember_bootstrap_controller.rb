@@ -40,7 +40,7 @@ module Amanuensis
       # against these paths, but if one ever does, render the same
       # bootstrap instead of hitting ActionView::MissingTemplate for a view
       # that doesn't exist.
-      render 'default/empty'
+      render "default/empty"
     end
   end
 end
