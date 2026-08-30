@@ -19,25 +19,31 @@ module Amanuensis
       params_hash[:before] = params[:before] if params[:before].present?
       params_hash[:outcome] = params[:outcome] if params[:outcome].present?
 
-      result = Amanuensis::ApiClient.reader.get("/v1/plugin/stages/#{params[:stage]}/runs", params_hash)
+      result =
+        Amanuensis::ApiClient.reader.get("/v1/plugin/stages/#{params[:stage]}/runs", params_hash)
 
       if result.ok?
         render json: {
-          stage: params[:stage],
-          stage_label: humanize_stage(params[:stage]),
-          observable_stages: observable_stages,
-          runs: result.body['runs'].map { |r| serialize_run_summary(r) },
-          pagination: result.body['pagination']
-        }
+                 stage: params[:stage],
+                 stage_label: humanize_stage(params[:stage]),
+                 observable_stages: observable_stages,
+                 runs: result.body["runs"].map { |r| serialize_run_summary(r) },
+                 pagination: result.body["pagination"],
+               }
       else
         render json: {
-          stage: params[:stage],
-          stage_label: humanize_stage(params[:stage]),
-          observable_stages: observable_stages,
-          runs: [],
-          pagination: { 'has_more' => false },
-          error: result.error || "Failed to fetch stage runs (status #{result.status || 'unknown'})"
-        }, status: 502
+                 stage: params[:stage],
+                 stage_label: humanize_stage(params[:stage]),
+                 observable_stages: observable_stages,
+                 runs: [],
+                 pagination: {
+                   "has_more" => false,
+                 },
+                 error:
+                   result.error ||
+                     "Failed to fetch stage runs (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
@@ -46,29 +52,34 @@ module Amanuensis
     def run
       raise Discourse::NotFound unless params[:run_id].to_s.match?(RUN_ID_FORMAT)
 
-      result = Amanuensis::ApiClient.reader.get("/v1/plugin/stages/#{params[:stage]}/runs/#{params[:run_id]}")
+      result =
+        Amanuensis::ApiClient.reader.get(
+          "/v1/plugin/stages/#{params[:stage]}/runs/#{params[:run_id]}",
+        )
 
       if result.ok?
         run = result.body
         render json: {
-          stage: params[:stage],
-          stage_label: humanize_stage(params[:stage]),
-          run: serialize_run_detail(run),
-          other_runs: fetch_other_runs(run['meeting_id']).map { |r| timeline_run(r) }
-        }
+                 stage: params[:stage],
+                 stage_label: humanize_stage(params[:stage]),
+                 run: serialize_run_detail(run),
+                 other_runs: fetch_other_runs(run["meeting_id"]).map { |r| timeline_run(r) },
+               }
       else
         render json: {
-          stage: params[:stage],
-          stage_label: humanize_stage(params[:stage]),
-          error: result.error || "Stage run not found (status #{result.status || 'unknown'})"
-        }, status: 502
+                 stage: params[:stage],
+                 stage_label: humanize_stage(params[:stage]),
+                 error:
+                   result.error || "Stage run not found (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
     private
 
     def validate_stage
-      raise Discourse::NotFound unless Amanuensis::PipelineStages::ORDER.include?(params[:stage])
+      raise Discourse::NotFound if Amanuensis::PipelineStages::ORDER.exclude?(params[:stage])
     end
 
     # The stage-switcher chips at the top of the runs list -- sent from the
@@ -77,7 +88,9 @@ module Amanuensis
     # stage order already has to be hand-kept in sync with a different repo
     # (see that module's own comment).
     def observable_stages
-      Amanuensis::PipelineStages::OBSERVABLE.map { |stage| { value: stage, label: humanize_stage(stage) } }
+      Amanuensis::PipelineStages::OBSERVABLE.map do |stage|
+        { value: stage, label: humanize_stage(stage) }
+      end
     end
 
     # meeting_id is a NOT NULL FK on stage_runs, so a well-formed upstream
@@ -90,41 +103,41 @@ module Amanuensis
       return [] if meeting_id.blank?
 
       meeting_result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings/#{meeting_id}")
-      meeting_result.ok? ? meeting_result.body['stage_runs'] : []
+      meeting_result.ok? ? meeting_result.body["stage_runs"] : []
     end
 
     def serialize_run_summary(run)
       {
-        id: run['id'],
-        meeting_id: run['meeting_id'],
-        meeting_title: run['meeting_title'],
-        started_at: run['started_at'],
-        duration: run['duration_ms'] ? format_duration_ms(run['duration_ms']) : nil,
-        attempt: run['attempt'],
-        outcome: run['outcome'],
-        failure_reason: run['failure_reason'],
-        inferred: run['inferred']
+        id: run["id"],
+        meeting_id: run["meeting_id"],
+        meeting_title: run["meeting_title"],
+        started_at: run["started_at"],
+        duration: run["duration_ms"] ? format_duration_ms(run["duration_ms"]) : nil,
+        attempt: run["attempt"],
+        outcome: run["outcome"],
+        failure_reason: run["failure_reason"],
+        inferred: run["inferred"],
       }
     end
 
     def serialize_run_detail(run)
       {
-        id: run['id'],
-        meeting_id: run['meeting_id'],
-        meeting_title: run['meeting_title'],
-        stage: run['stage'],
-        stage_label: humanize_stage(run['stage']),
-        outcome: run['outcome'],
-        attempt: run['attempt'],
-        started_at: run['started_at'],
-        finished_at: run['finished_at'],
-        duration: run['duration_ms'] ? format_duration_ms(run['duration_ms']) : nil,
-        job_id: run['job_id'],
-        rewind_to: run['rewind_to'],
-        rewind_to_label: run['rewind_to'] ? humanize_stage(run['rewind_to']) : nil,
-        inferred: run['inferred'],
-        error_code: run['error_code'],
-        failure_reason: run['failure_reason']
+        id: run["id"],
+        meeting_id: run["meeting_id"],
+        meeting_title: run["meeting_title"],
+        stage: run["stage"],
+        stage_label: humanize_stage(run["stage"]),
+        outcome: run["outcome"],
+        attempt: run["attempt"],
+        started_at: run["started_at"],
+        finished_at: run["finished_at"],
+        duration: run["duration_ms"] ? format_duration_ms(run["duration_ms"]) : nil,
+        job_id: run["job_id"],
+        rewind_to: run["rewind_to"],
+        rewind_to_label: run["rewind_to"] ? humanize_stage(run["rewind_to"]) : nil,
+        inferred: run["inferred"],
+        error_code: run["error_code"],
+        failure_reason: run["failure_reason"],
       }
     end
   end

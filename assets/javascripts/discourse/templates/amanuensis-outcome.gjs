@@ -7,7 +7,8 @@ import AmanuensisProposalItemCard from "../components/amanuensis-proposal-item-c
 
 export default <template>
   <div class="amanuensis-container">
-    <LinkTo @route="amanuensis-outcomes" class="amanuensis-back-link">&larr; Back to outcomes</LinkTo>
+    <LinkTo @route="amanuensis-outcomes" class="amanuensis-back-link">&larr;
+      Back to outcomes</LinkTo>
 
     {{#if @controller.model.error}}
       <AmanuensisError @message={{@controller.model.error}} />
@@ -18,7 +19,10 @@ export default <template>
 
       <section class="amanuensis-section amanuensis-metadata">
         <div class="amanuensis-metadata-grid">
-          <AmanuensisMetadataItem @label="Recorded" @timestamp={{@controller.model.meeting.recorded_at}} />
+          <AmanuensisMetadataItem
+            @label="Recorded"
+            @timestamp={{@controller.model.meeting.recorded_at}}
+          />
         </div>
         <LinkTo
           @route="amanuensis-meeting"
@@ -30,11 +34,14 @@ export default <template>
       {{#if @controller.model.proposal}}
         <section class="amanuensis-section amanuensis-proposal">
           <h2>Proposal Items</h2>
-          <p class="amanuensis-proposal-state">State: <strong>{{@controller.model.proposal.state}}</strong></p>
+          <p class="amanuensis-proposal-state">State:
+            <strong>{{@controller.model.proposal.state}}</strong></p>
 
           {{#each @controller.model.proposal.groups as |group|}}
             <div class="amanuensis-item-group">
-              <h3 class="amanuensis-item-group-header amanuensis-item-group-{{group.decision}}">
+              <h3
+                class="amanuensis-item-group-header amanuensis-item-group-{{group.decision}}"
+              >
                 {{group.decision_label}}
                 <span class="amanuensis-item-count">{{group.count}}</span>
               </h3>

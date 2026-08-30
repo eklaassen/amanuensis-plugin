@@ -1,5 +1,5 @@
-import Controller from "@ember/controller";
 import { tracked } from "@glimmer/tracking";
+import Controller from "@ember/controller";
 import { action } from "@ember/object";
 import { ajax } from "discourse/lib/ajax";
 import { extractError } from "discourse/lib/ajax-error";
@@ -28,7 +28,9 @@ export default class AmanuensisUploadNewController extends Controller {
   }
 
   get acceptAttr() {
-    return this.model.allowed_extensions.map((extension) => `.${extension}`).join(",");
+    return this.model.allowed_extensions
+      .map((extension) => `.${extension}`)
+      .join(",");
   }
 
   get allowedExtensionsHint() {
@@ -116,7 +118,10 @@ export default class AmanuensisUploadNewController extends Controller {
     // the pipeline both re-validate, and neither trusts this.
     const allowed = this.model.allowed_extensions;
     if (!allowed.includes(this.extensionOf(file.name))) {
-      this.showMessage(`That file type is not allowed. Allowed: ${allowed.join(", ")}.`, "error");
+      this.showMessage(
+        `That file type is not allowed. Allowed: ${allowed.join(", ")}.`,
+        "error"
+      );
       return;
     }
     if (file.size > this.model.max_bytes) {
@@ -136,13 +141,19 @@ export default class AmanuensisUploadNewController extends Controller {
     this.progressLabel = "Preparing…";
 
     try {
-      const ticket = await ajax("/amanuensis/api/uploads", { type: "POST", data: meta });
-      await this.putFile(ticket.upload_url, file, ticket.content_type);
-      this.progressLabel = "Finishing…";
-      const done = await ajax(`/amanuensis/api/uploads/${encodeURIComponent(ticket.upload_id)}/complete`, {
+      const ticket = await ajax("/amanuensis/api/uploads", {
         type: "POST",
         data: meta,
       });
+      await this.putFile(ticket.upload_url, file, ticket.content_type);
+      this.progressLabel = "Finishing…";
+      const done = await ajax(
+        `/amanuensis/api/uploads/${encodeURIComponent(ticket.upload_id)}/complete`,
+        {
+          type: "POST",
+          data: meta,
+        }
+      );
 
       this.setBusy(false);
       this.title = "";
@@ -165,7 +176,10 @@ export default class AmanuensisUploadNewController extends Controller {
       // putFile's own rejections are plain Errors with the message already
       // meant for display; ajax() rejections need extractError to pull the
       // {errors: [...]} shape UploadsApiController renders out of the jqXHR.
-      const text = error instanceof Error ? error.message : extractError(error, "Upload failed.");
+      const text =
+        error instanceof Error
+          ? error.message
+          : extractError(error, "Upload failed.");
       this.showMessage(text, "error");
     }
   }

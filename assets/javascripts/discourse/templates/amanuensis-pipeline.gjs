@@ -22,18 +22,31 @@ export default <template>
           </h2>
           <div class="amanuensis-meetings-list">
             {{#each group.meetings as |meeting|}}
-              <LinkTo @route="amanuensis-meeting" @model={{meeting.id}} class="amanuensis-meeting-card">
+              <LinkTo
+                @route="amanuensis-meeting"
+                @model={{meeting.id}}
+                class="amanuensis-meeting-card"
+              >
                 <div class="amanuensis-card-header">
                   <h3 class="amanuensis-meeting-title">{{meeting.title}}</h3>
-                  <AmanuensisBadge @label={{meeting.source_label}} @variant="source" />
+                  <AmanuensisBadge
+                    @label={{meeting.source_label}}
+                    @variant="source"
+                  />
                 </div>
                 <div class="amanuensis-card-meta">
                   <span class="amanuensis-meta-item">
                     <AmanuensisIcon @name="clock" @size={{14}} />
-                    Updated <AmanuensisLocalTime @timestamp={{meeting.updated_at}} @relative={{true}} />
+                    Updated
+                    <AmanuensisLocalTime
+                      @timestamp={{meeting.updated_at}}
+                      @relative={{true}}
+                    />
                   </span>
                   {{#if meeting.attempt_note}}
-                    <span class="amanuensis-meta-item">{{meeting.attempt_note}}</span>
+                    <span
+                      class="amanuensis-meta-item"
+                    >{{meeting.attempt_note}}</span>
                   {{/if}}
                 </div>
               </LinkTo>

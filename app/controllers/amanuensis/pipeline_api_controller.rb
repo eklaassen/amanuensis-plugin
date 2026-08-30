@@ -13,38 +13,46 @@ module Amanuensis
     include Amanuensis::Formatting
 
     def active
-      result = Amanuensis::ApiClient.reader.get('/v1/plugin/pipeline/active')
+      result = Amanuensis::ApiClient.reader.get("/v1/plugin/pipeline/active")
 
       if result.ok?
-        meetings = result.body['meetings']
-        grouped = meetings.group_by { |m| m['status'] }
+        meetings = result.body["meetings"]
+        grouped = meetings.group_by { |m| m["status"] }
         # Ordered by pipeline stage; a stage with nothing in it is omitted
         # entirely rather than rendered as an empty section.
-        stage_groups = Amanuensis::PipelineStages::ORDER.filter_map do |stage|
-          next if grouped[stage].blank?
+        stage_groups =
+          Amanuensis::PipelineStages::ORDER.filter_map do |stage|
+            next if grouped[stage].blank?
 
-          { stage: stage, stage_label: humanize_stage(stage), meetings: grouped[stage].map { |m| serialize_meeting(m) } }
-        end
+            {
+              stage: stage,
+              stage_label: humanize_stage(stage),
+              meetings: grouped[stage].map { |m| serialize_meeting(m) },
+            }
+          end
 
         render json: { stage_groups: stage_groups }
       else
         render json: {
-          stage_groups: [],
-          error: result.error || "Failed to fetch active pipeline (status #{result.status || 'unknown'})"
-        }, status: 502
+                 stage_groups: [],
+                 error:
+                   result.error ||
+                     "Failed to fetch active pipeline (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
     private
 
     def serialize_meeting(meeting)
-      attempt = meeting['current_stage_attempt'].to_i
+      attempt = meeting["current_stage_attempt"].to_i
       {
-        id: meeting['id'],
-        title: meeting['title'],
-        source_label: meeting['source'].to_s.humanize,
-        updated_at: meeting['updated_at'],
-        attempt_note: attempt > 1 ? "attempt #{attempt}" : nil
+        id: meeting["id"],
+        title: meeting["title"],
+        source_label: meeting["source"].to_s.humanize,
+        updated_at: meeting["updated_at"],
+        attempt_note: attempt > 1 ? "attempt #{attempt}" : nil,
       }
     end
   end

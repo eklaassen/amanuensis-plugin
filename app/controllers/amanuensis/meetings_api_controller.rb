@@ -23,19 +23,24 @@ module Amanuensis
       params_hash[:status] = params[:status] if params[:status].present?
       params_hash[:canon_status] = params[:canon_status] if params[:canon_status].present?
 
-      result = Amanuensis::ApiClient.reader.get('/v1/plugin/meetings', params_hash)
+      result = Amanuensis::ApiClient.reader.get("/v1/plugin/meetings", params_hash)
 
       if result.ok?
         render json: {
-          meetings: result.body['meetings'].map { |m| serialize_meeting_summary(m) },
-          pagination: result.body['pagination']
-        }
+                 meetings: result.body["meetings"].map { |m| serialize_meeting_summary(m) },
+                 pagination: result.body["pagination"],
+               }
       else
         render json: {
-          meetings: [],
-          pagination: { 'has_more' => false },
-          error: result.error || "Failed to fetch meetings (status #{result.status || 'unknown'})"
-        }, status: 502
+                 meetings: [],
+                 pagination: {
+                   "has_more" => false,
+                 },
+                 error:
+                   result.error ||
+                     "Failed to fetch meetings (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
@@ -49,8 +54,10 @@ module Amanuensis
       if result.ok?
         render json: serialize_meeting_detail(result.body)
       else
-        render json: { error: result.error || "Meeting not found (status #{result.status || 'unknown'})" },
-               status: 502
+        render json: {
+                 error: result.error || "Meeting not found (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
@@ -67,15 +74,19 @@ module Amanuensis
     def speaker_access
       raise Discourse::NotFound unless params[:id].to_s.match?(MEETING_ID_FORMAT)
 
-      result = Amanuensis::ApiClient.admin.post("/v1/plugin/meetings/#{params[:id]}/speaker-access-token")
-      url = result.ok? && result.body.is_a?(Hash) ? result.body['url'] : nil
+      result =
+        Amanuensis::ApiClient.admin.post("/v1/plugin/meetings/#{params[:id]}/speaker-access-token")
+      url = result.ok? && result.body.is_a?(Hash) ? result.body["url"] : nil
 
       if url.present? && valid_relabel_url?(url)
         render json: { url: url }
       else
         render json: {
-          error: result.error || "Could not create a relabel link (status #{result.status || 'unknown'})"
-        }, status: 502
+                 error:
+                   result.error ||
+                     "Could not create a relabel link (status #{result.status || "unknown"})",
+               },
+               status: :bad_gateway
       end
     end
 
@@ -94,46 +105,46 @@ module Amanuensis
 
     def serialize_meeting_summary(meeting)
       {
-        id: meeting['id'],
-        title: meeting['title'],
-        status: meeting['status'],
-        source: meeting['source'],
-        source_label: meeting['source'].to_s.humanize,
-        recorded_at: meeting['recorded_at'],
-        duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
-        has_notesbot_transcript: meeting['has_notesbot_transcript'],
-        has_summary: meeting['has_summary'],
-        canon_status: meeting['canon_status']
+        id: meeting["id"],
+        title: meeting["title"],
+        status: meeting["status"],
+        source: meeting["source"],
+        source_label: meeting["source"].to_s.humanize,
+        recorded_at: meeting["recorded_at"],
+        duration: meeting["duration_seconds"] ? format_duration(meeting["duration_seconds"]) : nil,
+        has_notesbot_transcript: meeting["has_notesbot_transcript"],
+        has_summary: meeting["has_summary"],
+        canon_status: meeting["canon_status"],
       }
     end
 
     def serialize_meeting_detail(data)
-      meeting = data['meeting']
-      proposal = data['proposal']
+      meeting = data["meeting"]
+      proposal = data["proposal"]
 
       {
         meeting: serialize_meeting_full(meeting),
         notesbot_groups: notesbot_groups_for(meeting),
-        notesbot_turn_count: meeting['notesbot_turns']&.length || 0,
+        notesbot_turn_count: meeting["notesbot_turns"]&.length || 0,
         # The full proposal/history breakdown lives on the outcome-detail
         # page now (OutcomesApiController#show) -- this page only needs to
         # know whether to show the "See outcome details" link.
-        has_outcome: proposal.present? && proposal['items'].present?,
-        stage_runs: (data['stage_runs'] || []).map { |r| timeline_run(r) }
+        has_outcome: proposal.present? && proposal["items"].present?,
+        stage_runs: (data["stage_runs"] || []).map { |r| timeline_run(r) },
       }
     end
 
     def serialize_meeting_full(meeting)
       {
-        id: meeting['id'],
-        title: meeting['title'],
-        status: meeting['status'],
-        source: meeting['source'],
-        source_label: meeting['source'].to_s.humanize,
-        recorded_at: meeting['recorded_at'],
-        duration: meeting['duration_seconds'] ? format_duration(meeting['duration_seconds']) : nil,
-        discourse_topic_id: meeting['discourse_topic_id'],
-        summary_html: meeting['summary'].present? ? sanitized_summary(meeting['summary']) : nil
+        id: meeting["id"],
+        title: meeting["title"],
+        status: meeting["status"],
+        source: meeting["source"],
+        source_label: meeting["source"].to_s.humanize,
+        recorded_at: meeting["recorded_at"],
+        duration: meeting["duration_seconds"] ? format_duration(meeting["duration_seconds"]) : nil,
+        discourse_topic_id: meeting["discourse_topic_id"],
+        summary_html: meeting["summary"].present? ? sanitized_summary(meeting["summary"]) : nil,
       }
     end
 
@@ -142,30 +153,40 @@ module Amanuensis
     # (never left it nil) whenever this section rendered at all, so that
     # fallback was dead code. Not reproduced here.
     def notesbot_groups_for(meeting)
-      turns = meeting['notesbot_turns']
-      return nil unless meeting['source'] == 'notesbot' && turns.present?
+      turns = meeting["notesbot_turns"]
+      return nil unless meeting["source"] == "notesbot" && turns.present?
 
-      turns.group_by { |t| t['speaker'] }.map do |speaker, speaker_turns|
-        {
-          speaker: speaker,
-          # A bare hex color, not a CSS declaration string -- the template
-          # sets it as a plain --amanuensis-speaker-color custom property
-          # (an ordinary attribute value, not raw HTML), so no html-safe/
-          # trustHTML ceremony is needed to bind it.
-          speaker_color: speaker_color(speaker),
-          turn_count: speaker_turns.length,
-          turns: speaker_turns.map { |t| { timestamp: t['timestamp'], text: t['text'] } }
-        }
-      end
+      turns
+        .group_by { |t| t["speaker"] }
+        .map do |speaker, speaker_turns|
+          {
+            speaker: speaker,
+            # A bare hex color, not a CSS declaration string -- the template
+            # sets it as a plain --amanuensis-speaker-color custom property
+            # (an ordinary attribute value, not raw HTML), so no html-safe/
+            # trustHTML ceremony is needed to bind it.
+            speaker_color: speaker_color(speaker),
+            turn_count: speaker_turns.length,
+            turns: speaker_turns.map { |t| { timestamp: t["timestamp"], text: t["text"] } },
+          }
+        end
     end
 
     SPEAKER_COLORS = %w[
-      #4A90D9 #E8734A #50B86C #D94A8E #B86CE8
-      #4AD9C8 #E8B04A #6CB850 #D94A4A #4A6CD9
+      #4A90D9
+      #E8734A
+      #50B86C
+      #D94A8E
+      #B86CE8
+      #4AD9C8
+      #E8B04A
+      #6CB850
+      #D94A4A
+      #4A6CD9
     ].freeze
 
     def speaker_color(speaker)
-      return '' if speaker.blank?
+      return "" if speaker.blank?
 
       hash = speaker.each_char.map(&:ord).sum
       SPEAKER_COLORS[hash % SPEAKER_COLORS.length]
