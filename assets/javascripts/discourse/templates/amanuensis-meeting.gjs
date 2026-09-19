@@ -1,4 +1,3 @@
-import { on } from "@ember/modifier";
 import { LinkTo } from "@ember/routing";
 import { trustHTML } from "@ember/template";
 import { or } from "discourse/truth-helpers";
@@ -118,8 +117,7 @@ export default <template>
 
       {{#if
         (or
-          @controller.model.has_outcome
-          @controller.currentUser.can_relabel_speakers_amanuensis
+          @controller.model.has_outcome @controller.model.relabel_speakers_url
         )
       }}
         <footer class="amanuensis-meeting-footer">
@@ -131,24 +129,15 @@ export default <template>
             >See outcome details &rarr;</LinkTo>
           {{/if}}
 
-          {{! Visibility here is a UX nicety only -- the real gate is server-side
-              (ensure_relabel_speakers on MeetingsApiController#speaker_access). }}
-          {{#if @controller.currentUser.can_relabel_speakers_amanuensis}}
-            <button
-              type="button"
+          {{! Deep link into Amanuensis's session-authenticated relabel page;
+              relabel_speakers_url is only present for permitted users. }}
+          {{#if @controller.model.relabel_speakers_url}}
+            <a
               class="btn amanuensis-relabel-speakers-link"
-              disabled={{@controller.relabelBusy}}
-              {{on "click" @controller.openRelabelSpeakers}}
-            >{{if
-                @controller.relabelBusy
-                "Opening…"
-                "Relabel speakers"
-              }}</button>
-            {{#if @controller.relabelError}}
-              <span
-                class="amanuensis-relabel-speakers-error"
-              >{{@controller.relabelError}}</span>
-            {{/if}}
+              href={{@controller.model.relabel_speakers_url}}
+              target="_blank"
+              rel="noopener noreferrer"
+            >Relabel speakers</a>
           {{/if}}
         </footer>
       {{/if}}

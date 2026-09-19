@@ -8,6 +8,12 @@ plugins:
     default: ""
     type: string
 
+  # Base URL of the Amanuensis web app (not the API) -- used to deep-link
+  # moderators into /meetings/:id/speakers, e.g. https://amanuens.is
+  amanuensis_web_url:
+    default: ""
+    type: string
+
   amanuensis_api_secret:
     default: ""
     secret: true

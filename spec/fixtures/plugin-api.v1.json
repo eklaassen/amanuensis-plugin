@@ -95,6 +95,170 @@
       "method": "POST",
       "path": "/v1/plugin/meetings/:meeting_id/speaker-access-token",
       "credential": "adminSecret"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/agenda-candidates",
+      "credential": "adminSecret",
+      "request": {
+        "type": "object",
+        "required": [
+          "discourse_topic_id",
+          "title",
+          "url",
+          "flagged_by_user_id",
+          "flagged_by_username"
+        ],
+        "properties": {
+          "discourse_topic_id": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "title": {
+            "minLength": 1,
+            "maxLength": 500,
+            "type": "string"
+          },
+          "url": {
+            "minLength": 1,
+            "maxLength": 2048,
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "flagged_by_user_id": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "flagged_by_username": {
+            "minLength": 1,
+            "maxLength": 60,
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/plugin/agenda-candidates/by-topic/:discourse_topic_id",
+      "credential": "adminSecret"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/agenda-candidates",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/agendas",
+      "credential": "adminSecret",
+      "request": {
+        "type": "object",
+        "required": [
+          "title",
+          "items"
+        ],
+        "properties": {
+          "title": {
+            "minLength": 1,
+            "maxLength": 300,
+            "type": "string"
+          },
+          "items": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "candidate_id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "candidate",
+                      "type": "string"
+                    },
+                    "candidate_id": {
+                      "minLength": 1,
+                      "maxLength": 64,
+                      "type": "string"
+                    },
+                    "note": {
+                      "anyOf": [
+                        {
+                          "maxLength": 2000,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "title",
+                    "body"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "section",
+                      "type": "string"
+                    },
+                    "title": {
+                      "minLength": 1,
+                      "maxLength": 300,
+                      "type": "string"
+                    },
+                    "body": {
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/plugin/agendas/:id",
+      "credential": "pluginSecret"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/plugin/agendas/:id/publish",
+      "credential": "adminSecret",
+      "request": {
+        "type": "object",
+        "required": [
+          "discourse_topic_id"
+        ],
+        "properties": {
+          "discourse_topic_id": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        }
+      }
     }
   ]
 }
