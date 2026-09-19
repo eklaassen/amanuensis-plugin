@@ -103,6 +103,23 @@ module Amanuensis
       false
     end
 
+    # Deep-link into Amanuensis's session-authenticated relabel page -- the
+    # plugin no longer mints a credential on the user's behalf; Amanuensis
+    # authenticates whoever arrives. Only handed to relabel_speakers-group
+    # members (a UX gate; Amanuensis enforces project roles itself), and only
+    # when amanuensis_web_url is a plain http(s) URL, so the link can never
+    # be something like a javascript: URI.
+    def relabel_speakers_url(meeting_id)
+      return nil unless Amanuensis::Permissions.relabel_speakers?(current_user)
+
+      base = SiteSetting.amanuensis_web_url.to_s.strip
+      return nil unless URI.parse(base).is_a?(URI::HTTP) # covers URI::HTTPS too
+
+      "#{base.chomp("/")}/meetings/#{meeting_id}/speakers"
+    rescue URI::InvalidURIError
+      nil
+    end
+
     def serialize_meeting_summary(meeting)
       {
         id: meeting["id"],
@@ -129,6 +146,7 @@ module Amanuensis
         # The full proposal/history breakdown lives on the outcome-detail
         # page now (OutcomesApiController#show) -- this page only needs to
         # know whether to show the "See outcome details" link.
+        relabel_speakers_url: relabel_speakers_url(meeting["id"]),
         has_outcome: proposal.present? && proposal["items"].present?,
         stage_runs: (data["stage_runs"] || []).map { |r| timeline_run(r) },
       }

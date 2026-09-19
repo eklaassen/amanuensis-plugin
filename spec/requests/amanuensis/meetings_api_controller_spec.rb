@@ -349,6 +349,65 @@ RSpec.describe Amanuensis::MeetingsApiController, type: :request do
     end
   end
 
+  describe "#show relabel_speakers_url" do
+    fab!(:relabel_group, :group)
+
+    before do
+      SiteSetting.amanuensis_viewing_group = group.name
+      group.add(user)
+      SiteSetting.amanuensis_web_url = "https://amanuens.is"
+      stub_meeting_show(
+        "abc123",
+        meeting: {
+          "id" => "abc123",
+          "title" => "Standup",
+          "source" => "google_meet",
+          "status" => "complete",
+        },
+      )
+      sign_in(user)
+    end
+
+    def relabel_url
+      get "/amanuensis/api/meetings/abc123"
+      expect(response.status).to eq(200)
+      response.parsed_body["relabel_speakers_url"]
+    end
+
+    it "is nil for a viewer outside the relabel-speakers group" do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      expect(relabel_url).to be_nil
+    end
+
+    it "deep-links into the session-authenticated SPA for a relabel-speakers member" do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      relabel_group.add(user)
+      expect(relabel_url).to eq("https://amanuens.is/meetings/abc123/speakers")
+    end
+
+    it "tolerates a trailing slash on the configured base URL" do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      relabel_group.add(user)
+      SiteSetting.amanuensis_web_url = "https://amanuens.is/"
+      expect(relabel_url).to eq("https://amanuens.is/meetings/abc123/speakers")
+    end
+
+    it "is nil when amanuensis_web_url is blank" do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      relabel_group.add(user)
+      SiteSetting.amanuensis_web_url = ""
+      expect(relabel_url).to be_nil
+    end
+
+    it "is nil when amanuensis_web_url is not http(s)" do
+      SiteSetting.amanuensis_relabel_speakers_group = relabel_group.name
+      relabel_group.add(user)
+      SiteSetting.amanuensis_web_url = "javascript:alert(1)"
+      expect(relabel_url).to be_nil
+    end
+
+  end
+
   describe "#speaker_access" do
     fab!(:relabel_group, :group)
 
