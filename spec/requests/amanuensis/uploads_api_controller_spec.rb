@@ -32,7 +32,7 @@ RSpec.describe Amanuensis::UploadsApiController, type: :request do
 
   # The secret value a given fixture credential (:admin/:reader) resolves to
   # under this file's SiteSettings -- not hardcoded, so a contract change
-  # (say, this route moving from adminSecret to pluginSecret) changes what
+  # (say, this route moving from pluginAdminSecret to pluginSecret) changes what
   # every stub below expects without anyone having to notice and update a
   # literal string.
   def secret_for(credential)

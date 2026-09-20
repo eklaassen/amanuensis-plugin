@@ -7,8 +7,8 @@ module Amanuensis
   # -- amanuensis's emitted PLUGIN_CONTRACT, see amanuensis#229) so specs can
   # resolve "which credential does this route expect" and "does this body
   # match its request shape" from the contract itself, rather than a literal
-  # a spec picked on its own -- the same class of drift the ADMIN_SECRET /
-  # PLUGIN_SECRET mismatch was.
+  # a spec picked on its own -- the same class of drift the admin/reader
+  # secret mismatch was.
   #
   # Deliberately dependency-free (no json_schemer, no Rails): the fixture's
   # schemas are TypeBox-emitted and stay flat and simple (required keys,
@@ -36,12 +36,12 @@ module Amanuensis
         raise(UnknownRoute, "#{method} #{path} is not in the vendored contract fixture")
     end
 
-    # 'adminSecret' -> :admin, 'pluginSecret' -> :reader -- matches
+    # 'pluginAdminSecret' -> :admin, 'pluginSecret' -> :reader -- matches
     # ApiClient.admin / ApiClient.reader, the two constructors this is meant
     # to disambiguate between.
     def self.credential_for(method:, path:)
       case route(method: method, path: path)["credential"]
-      when "adminSecret"
+      when "pluginAdminSecret"
         :admin
       when "pluginSecret"
         :reader
