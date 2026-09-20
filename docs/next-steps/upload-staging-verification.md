@@ -32,7 +32,7 @@ Catches the credential and signature bugs without any browser:
 
 ```bash
 curl -X POST "$API/v1/plugin/uploads" \
-  -H "Authorization: Bearer $ADMIN_SECRET" \
+  -H "Authorization: Bearer $PLUGIN_ADMIN_SECRET" \
   -H 'Content-Type: application/json' \
   -d '{"filename":"t.mp3","size_bytes":1024,"title":"T","recorded_at":"2026-08-01T19:00:00Z"}'
 ```
@@ -45,7 +45,7 @@ curl -X PUT --upload-file t.mp3 -H "Content-Type: audio/mpeg" "$UPLOAD_URL"
 
 Then complete, and confirm a Meeting row appears at `status='transcribing'`, `source='manual_upload'`.
 
-⚠️ **`ADMIN_SECRET` is `Type.Optional` in config.** If it isn't set in the target environment these routes 401 unconditionally. The admin dashboard uses the same secret via `requireBasicAuth`, so it should already be set — confirm rather than assume.
+⚠️ **`PLUGIN_ADMIN_SECRET` is `Type.Optional` in config** (Amanuensis renamed it from `ADMIN_SECRET`, same value). If it isn't set in the target environment these routes 401 unconditionally, and a server that has only the old `ADMIN_SECRET` refuses to start — confirm rather than assume.
 
 ## 4. Tier 3 — staging, as a real writer
 
