@@ -93,11 +93,6 @@
     },
     {
       "method": "POST",
-      "path": "/v1/plugin/meetings/:meeting_id/speaker-access-token",
-      "credential": "adminSecret"
-    },
-    {
-      "method": "POST",
       "path": "/v1/plugin/agenda-candidates",
       "credential": "adminSecret",
       "request": {
