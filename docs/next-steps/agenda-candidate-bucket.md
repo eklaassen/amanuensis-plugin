@@ -14,7 +14,7 @@ Ownership is **hybrid** — the API stores agenda items as structured data; the 
 
 ## 2. API contract (build first — the plugin is blocked on it)
 
-Bearer auth. The bucket is a read-tier operation (`pluginSecret`); publishing writes, so weigh `adminSecret` there, consistent with what `/v1/plugin/uploads` settled on.
+Bearer auth. The bucket is a read-tier operation (`pluginSecret`); publishing writes, so weigh `pluginAdminSecret` there, consistent with what `/v1/plugin/uploads` settled on.
 
 - `POST /v1/plugin/agenda-candidates` — idempotent upsert keyed on `discourse_topic_id`. Body `{discourse_topic_id, title, url, note, flagged_by_user_id, flagged_by_username}`. Re-flagging a pending item updates the note → 200. Re-flagging a consumed item → 409 `already_consumed` with the owning `agenda_id`.
 - `DELETE /v1/plugin/agenda-candidates/by-topic/:discourse_topic_id` → 204, or 409 if consumed.
